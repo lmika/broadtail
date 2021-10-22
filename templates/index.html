@@ -5,6 +5,33 @@
 
     <h3>Jobs</h3>
 
-    
+    <table>
+        <thead>
+            <tr>
+                <th>Job</th>
+                <th>State</th>
+                <th>Last Update</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .jobs}}
+            <tr>
+                <td>{{.Task}}</td>
+                <td>{{.State}}</td>
+                <td>{{.LastUpdate.Status}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+
+    <form action="/job/download/youtube" method="post">
+        <div>
+            <label for="youtube_id">YouTube ID:</label>
+            <input name="youtube_id" id="youtube_id">
+        </div>
+        <div>
+            <input type="submit" value="New Job">
+        </div>
+    </form>
 </body>
 </html>
