@@ -1,37 +1,50 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <script src="/public/js/main.js"></script>
+</head>
 <body>
     <h1>Broadtail</h1>
 
-    <h3>Jobs</h3>
+    <div>
+        <h3>Jobs</h3>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Job</th>
-                <th>State</th>
-                <th>Last Update</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{range .jobs}}
-            <tr>
-                <td>{{.Task}}</td>
-                <td>{{.State}}</td>
-                <td>{{.LastUpdate.Status}}</td>
-            </tr>
-            {{end}}
-        </tbody>
-    </table>
+        <table>
+            <thead>
+                <tr>
+                    <th>Job</th>
+                    <th>State</th>
+                    <th>Last Update</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .jobs}}
+                <tr>
+                    <td>{{.Task}}</td>
+                    <td>{{.State}}</td>
+                    <td>{{.LastUpdate.Status}}</td>
+                    <td><a href="/jobs/{{.ID}}" data-method="DELETE" data-confirm="Cancel job?">Cancel</a></td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
 
-    <form action="/job/download/youtube" method="post">
         <div>
-            <label for="youtube_id">YouTube ID:</label>
-            <input name="youtube_id" id="youtube_id">
+            <a href="/">Refresh</a> | <span>History</span> | <a href="/jobs/done" data-method="DELETE">Clear</a>
         </div>
-        <div>
-            <input type="submit" value="New Job">
-        </div>
-    </form>
+    </div>
+
+    <div>
+        <form action="/job/download/youtube" method="post">
+            <div>
+                <label for="youtube_id">YouTube ID:</label>
+                <input name="youtube_id" id="youtube_id">
+            </div>
+            <div>
+                <input type="submit" value="New Job">
+            </div>
+        </form>
+    </div>
 </body>
 </html>

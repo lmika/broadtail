@@ -3,20 +3,25 @@ package ytdownload
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"github.com/lmika/broadtail/jobs"
 	"github.com/pkg/errors"
 	"os/exec"
 )
 
 type YoutubeDownloadTask struct {
+	YoutubeId string
+	TargetDir string
 }
 
 func (y *YoutubeDownloadTask) String() string {
-	return "Download XX"
+	return "Downloading " + y.YoutubeId
 }
 
 func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunContext) error {
-	cmd := exec.Command("youtube-dl", "--newline", "-f", "mp4[height<=720]", "https://www.youtube.com/watch?v=BaW_jenozKc")
+	downloadUrl := fmt.Sprintf("https://www.youtube.com/watch?v=%v", y.YoutubeId)
+	cmd := exec.CommandContext(ctx, "python3", "/usr/local/bin/youtube-dl", "--newline", "-f", "mp4[height<=720]", downloadUrl)
+	cmd.Dir = y.TargetDir
 
 	stderrPipe, err := cmd.StdoutPipe()
 	if err != nil {
@@ -34,7 +39,7 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 	}
 
 	if err := cmd.Wait(); err != nil {
-		return errors.Wrap(err, "caught error waiting for procress")
+		return errors.Wrap(err, "caught error waiting for process")
 	}
 	return nil
 }

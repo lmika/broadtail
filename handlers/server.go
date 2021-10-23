@@ -5,29 +5,44 @@ import (
 	"github.com/lmika/broadtail/jobs"
 	"github.com/lmika/broadtail/middleware/jobdispatcher"
 	"github.com/lmika/broadtail/middleware/render"
+	"github.com/lmika/broadtail/middleware/ujs"
 	"github.com/lmika/broadtail/services/ytdownload"
 	"github.com/pkg/errors"
 	"html/template"
+	"io/fs"
 	"net/http"
-	"os"
 )
 
-func Server() (http.Handler, error) {
+type Config struct {
+	LibraryDir string
+
+	TemplateFS fs.FS
+	AssetFS    fs.FS
+}
+
+func Server(config Config) (http.Handler, error) {
 	dispatcher := jobs.New()
-	tmpls, err := template.ParseFS(os.DirFS("templates"), "*.html")
+	tmpls, err := template.ParseFS(config.TemplateFS, "*.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot parse templates")
 	}
 
-	ytdownloadService := ytdownload.New()
+	ytdownloadService := ytdownload.New(ytdownload.Config{
+		LibraryDir: config.LibraryDir,
+	})
 
 	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService}
+	jobsHandlers := &jobsHandlers{}
 
 	r := mux.NewRouter()
 	r.Handle("/", indexHandler()).Methods("GET")
 	r.Handle("/job/download/youtube", ytdownloadHandlers.CreateDownloadJob()).Methods("POST")
+	r.Handle("/jobs/done", jobsHandlers.ClearDone()).Methods("DELETE")
+	r.Handle("/jobs/{job_id}", jobsHandlers.Delete()).Methods("DELETE")
+	r.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.FS(config.AssetFS))))
 
-	handler := jobdispatcher.New(dispatcher).Use(r)
+	handler := ujs.MethodRewriteHandler(r)
+	handler = jobdispatcher.New(dispatcher).Use(handler)
 	handler = render.New(tmpls).Use(handler)
 
 	return handler, nil

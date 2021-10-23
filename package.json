@@ -1,0 +1,16 @@
+{
+  "name": "broadtail",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build-js": "esbuild assets/js/main.js --bundle --outfile=build/assets/js/main.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "esbuild": "^0.13.8",
+    "jquery": "^3.6.0",
+    "jquery-ujs": "^1.2.3"
+  }
+}

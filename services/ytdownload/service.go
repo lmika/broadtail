@@ -2,14 +2,23 @@ package ytdownload
 
 import "github.com/lmika/broadtail/jobs"
 
-type Service struct {
-
+type Config struct {
+	LibraryDir string
 }
 
-func New() *Service {
-	return &Service{}
+type Service struct {
+	config Config
+}
+
+func New(config Config) *Service {
+	return &Service{
+		config: config,
+	}
 }
 
 func (s *Service) NewYoutubeDownloadTask(youtubeId string) jobs.Task {
-	return &YoutubeDownloadTask{}
+	return &YoutubeDownloadTask{
+		YoutubeId: youtubeId,
+		TargetDir: s.config.LibraryDir,
+	}
 }
