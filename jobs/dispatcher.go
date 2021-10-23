@@ -50,11 +50,13 @@ func (d *Dispatcher) Job(id uuid.UUID) *Job {
 	return d.jobStore.Find(id)
 }
 
-// ClearDone removes all the jobs that are not running
-func (d *Dispatcher) ClearDone() {
-	for _, clearedJob := range d.jobStore.ClearDone() {
+// ClearDone removes all the jobs that are not running.  The jobs that were cleaned up will be returned.
+func (d *Dispatcher) ClearDone() []*Job {
+	done := d.jobStore.ClearDone()
+	for _, clearedJob := range done {
 		clearedJob.Cleanup()
 	}
+	return done
 }
 
 // Enqueue adds a new job to the wait queue.  If there is something that can
@@ -85,15 +87,6 @@ func (d *Dispatcher) Close() {
 	<-d.closeChan
 }
 
-// drain will execute all the jobs in the foreground.  This is used for testing
-// purposes.
-//func (d *Dispatcher) drain() {
-//	for e := d.waitList.Front(); e != nil; e = e.Next() {
-//		j := d.waitList.Remove(e).(*Job)
-//		d.startJob(context.Background(), j)
-//	}
-//}
-
 func (d *Dispatcher) start() {
 	runCtx, cancelFn := context.WithCancel(context.Background())
 	d.cancelFn = cancelFn
@@ -120,7 +113,7 @@ func (d *Dispatcher) subscriptionManager(ctx context.Context, eventChan chan sub
 		case event := <- eventChan:
 			switch e := event.(type) {
 			case subMgmtNewSubscription:
-				newSub := &Subscription{c: make(chan Update, 5)}
+				newSub := &Subscription{c: make(chan SubscriptionEvent, 5)}
 				newSub.elem = subList.PushBack(newSub)
 				newSub.closeFn = func() {
 					eventChan <- subMgmtUnsubscribe{newSub}
@@ -130,16 +123,12 @@ func (d *Dispatcher) subscriptionManager(ctx context.Context, eventChan chan sub
 				subList.Remove(e.sub.elem)
 			case subMgmtPublish:
 				for se := subList.Front(); se != nil; se = se.Next() {
-					se.Value.(*Subscription).c <- e.update
+					se.Value.(*Subscription).c <- e.event
 				}
 			}
 		}
 	}
 }
-
-//func (d *Dispatcher) publish(update Update) {
-//	d.subManagementChan <- subMgmtPublish{update}
-//}
 
 func (d *Dispatcher) loop(ctx context.Context) {
 	const workers int = 4
@@ -193,7 +182,7 @@ type subMgmtNewSubscription struct {
 }
 
 type subMgmtPublish struct {
-	update Update
+	event SubscriptionEvent
 }
 
 type subMgmtUnsubscribe struct {

@@ -23,6 +23,8 @@ type RunContext interface {
 	PostUpdate(update Update)
 	TempFile(pattern string) (*os.File, error)
 	Set(key string, value interface{})
+
+	postStateChange(fromState, toState JobState)
 }
 
 func PostUpdatef(runContext RunContext, msg string, args ...interface{}) {
@@ -36,7 +38,11 @@ type jobRunContext struct {
 
 func (rc *jobRunContext) PostUpdate(update Update) {
 	rc.job.setLastUpdate(update)
-	rc.subManagementChan <- subMgmtPublish{update}
+	rc.subManagementChan <- subMgmtPublish{UpdateSubscriptionEvent{rc.job, update}}
+}
+
+func (rc *jobRunContext) postStateChange(fromState, toState JobState) {
+	rc.subManagementChan <- subMgmtPublish{StateTransitionSubscriptionEvent{rc.job, fromState, toState}}
 }
 
 func (rc *jobRunContext) TempFile(pattern string) (*os.File, error) {

@@ -17,4 +17,4 @@ build-js: prep
 	npm run build-js
 
 prep:
-	mkdir build/assets/js
+	mkdir -p build/assets/js

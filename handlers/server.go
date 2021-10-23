@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"html/template"
 	"io/fs"
+	"log"
 	"net/http"
 )
 
@@ -22,6 +23,8 @@ type Config struct {
 
 func Server(config Config) (http.Handler, error) {
 	dispatcher := jobs.New()
+	dispatcherJobRecorderAndCleanupHandler(dispatcher)
+
 	tmpls, err := template.ParseFS(config.TemplateFS, "*.html")
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot parse templates")
@@ -46,4 +49,24 @@ func Server(config Config) (http.Handler, error) {
 	handler = render.New(tmpls).Use(handler)
 
 	return handler, nil
+}
+
+func dispatcherJobRecorderAndCleanupHandler(dispatcher *jobs.Dispatcher) {
+	sub := dispatcher.Subscribe()
+
+	go func() {
+		defer sub.Close()
+
+		for event := range sub.Chan() {
+			log.Printf("received event: %v", event)
+			switch e := event.(type) {
+			case jobs.StateTransitionSubscriptionEvent:
+				if e.ToState.Terminal() {
+					// TODO: save the done jobs
+					doneJobs := dispatcher.ClearDone()
+					log.Printf("Cleaned up %v jobs", len(doneJobs))
+				}
+			}
+		}
+	}()
 }

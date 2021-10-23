@@ -73,17 +73,17 @@ func (j *Job) exec(ctx context.Context, runContext RunContext) {
 	execCtx, cancelFn := context.WithCancel(ctx)
 	defer cancelFn()
 
-	j.setState(StateRunning, nil, cancelFn)
+	j.setState(runContext, StateRunning, nil, cancelFn)
 
 	err := j.task.Execute(execCtx, runContext)
 	select {
 	case <-execCtx.Done():
-		j.setState(StateCancelled, execCtx.Err(), nil)
+		j.setState(runContext, StateCancelled, execCtx.Err(), nil)
 	default:
 		if err != nil {
-			j.setState(StateError, err, nil)
+			j.setState(runContext, StateError, err, nil)
 		} else {
-			j.setState(StateCompleted, nil, nil)
+			j.setState(runContext, StateCompleted, nil, nil)
 		}
 	}
 }
@@ -131,13 +131,23 @@ func (j *Job) SetData(key string, value interface{}) {
 }
 
 // setState sets the job state in a safe manner
-func (j *Job) setState(state JobState, err error, cancelFn func()) {
-	j.stateMutex.Lock()
-	defer j.stateMutex.Unlock()
+func (j *Job) setState(runContext RunContext, state JobState, err error, cancelFn func()) {
+	var oldState JobState
 
+	// Critical section
+	j.stateMutex.Lock()
+
+	oldState = j.state
 	j.state = state
 	j.err = err
 	j.cancelFn = cancelFn
+
+	j.stateMutex.Unlock()
+	// End critical section
+
+	if oldState != state {
+		runContext.postStateChange(oldState, state)
+	}
 }
 
 // setState sets the job state in a safe manner
