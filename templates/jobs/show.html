@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="/public/js/main.js"></script>
+</head>
+<body>
+    <h1>Broadtail</h1>
+
+    <div>
+        <h3>Job {{.job.ID}}</h3>
+
+        <p>Name = {{.job.Name}}</p>
+        <p>State = {{.job.State}}</p>
+        <p>Created At = {{.job.CreatedAt}}</p>
+        <p>Completed At = {{.job.CompletedAt}}</p>
+        <p>Error = {{.job.Error}}</p>
+
+        <h3>Updates:</h3>
+
+        {{range .job.Updates}}
+            <div>{{.Message}}</div>
+        {{end}}
+    </div>
+</body>
+</html>

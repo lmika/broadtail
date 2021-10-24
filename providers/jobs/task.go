@@ -37,7 +37,7 @@ type jobRunContext struct {
 }
 
 func (rc *jobRunContext) PostUpdate(update Update) {
-	rc.job.setLastUpdate(update)
+	rc.job.postUpdate(update)
 	rc.subManagementChan <- subMgmtPublish{UpdateSubscriptionEvent{rc.job, update}}
 }
 

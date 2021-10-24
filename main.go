@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"github.com/lmika/broadtail/handlers"
@@ -8,17 +9,22 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"path/filepath"
+	"time"
 )
 
 func main() {
 	flagBindAddr := flag.String("bind", "", "bind address")
 	flagDevMode := flag.Bool("dev", false, "dev mode")
 	flagPort := flag.Int("p", 3690, "port")
+	flagDataDir := flag.String("data", ".", "data dir")
 	flagLibraryDir := flag.String("library", "", "library dir")
 	flag.Parse()
 
 	var templateFS, assetsFS fs.FS
 	if *flagDevMode {
+		log.Println("Starting in dev mode")
 		templateFS = os.DirFS("templates")
 		assetsFS = os.DirFS("build/assets")
 	} else {
@@ -34,15 +40,38 @@ func main() {
 		}
 	}
 
-	server, err := handlers.Server(handlers.Config{
-		LibraryDir: *flagLibraryDir,
-		TemplateFS: templateFS,
-		AssetFS: assetsFS,
+	handler, closeFn, err := handlers.Server(handlers.Config{
+		LibraryDir:     *flagLibraryDir,
+		CacheTemplates: !*flagDevMode,
+		JobDataFile:    filepath.Join(*flagDataDir, "jobs.db"),
+		TemplateFS:     templateFS,
+		AssetFS:        assetsFS,
 	})
 	if err != nil {
 		log.Fatalln(err)
 	}
 
+	server := &http.Server{
+		Addr:    fmt.Sprintf("%v:%v", *flagBindAddr, *flagPort),
+		Handler: handler,
+	}
+
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt)
+
+		<-c
+
+		ctx, cancelFn := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancelFn()
+		server.Shutdown(ctx)
+	}()
+
 	log.Printf("Listening on %v:%v", *flagBindAddr, *flagPort)
-	log.Println(http.ListenAndServe(fmt.Sprintf("%v:%v", *flagBindAddr, *flagPort), server))
+	server.ListenAndServe()
+
+	log.Printf("Shutting down")
+	closeFn()
+
+	log.Printf("All done. Bye.")
 }

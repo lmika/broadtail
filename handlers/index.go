@@ -1,16 +1,18 @@
 package handlers
 
 import (
-	"github.com/lmika/broadtail/middleware/jobdispatcher"
 	"github.com/lmika/broadtail/middleware/render"
+	"github.com/lmika/broadtail/services/jobsmanager"
 	"net/http"
 )
 
-func indexHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		jobs := jobdispatcher.FromContext(r.Context()).Dispatcher.List()
+type indexHandlers struct {
+	jobsManager *jobsmanager.JobsManager
+}
 
-		render.Set(r, "jobs", jobs)
+func (ih *indexHandlers) Index() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		render.Set(r, "jobs", ih.jobsManager.RecentJobs())
 		render.HTML(r, w, http.StatusOK, "index.html")
 	})
 }

@@ -5,7 +5,10 @@ import (
 	"github.com/google/uuid"
 	"os"
 	"sync"
+	"time"
 )
+
+const maxUpdateHistory = 20
 
 type JobState int
 
@@ -48,6 +51,7 @@ func (js JobState) Terminal() bool {
 type Job struct {
 	id   uuid.UUID
 	task Task
+	createdAt time.Time
 
 	// state variables.  These are under the control of the mutex
 	stateMutex sync.Mutex
@@ -55,6 +59,7 @@ type Job struct {
 	err        error
 	cancelFn   func()
 	lastUpdate Update
+	updateHistory *updateHistory
 	data       map[string]interface{}
 }
 
@@ -62,8 +67,10 @@ func newJob(task Task) *Job {
 	return &Job{
 		id:         uuid.New(),
 		task:       task,
+		createdAt: time.Now(),
 		state:      StateQueued,
 		stateMutex: sync.Mutex{},
+		updateHistory: newUpdateHistory(maxUpdateHistory),
 		data:       make(map[string]interface{}),
 	}
 }
@@ -95,6 +102,10 @@ func (j *Job) ID() uuid.UUID {
 // Task returns the original task of the job
 func (j *Job) Task() Task {
 	return j.task
+}
+
+func (j *Job) CreatedAt() time.Time {
+	return j.createdAt
 }
 
 func (j *Job) State() JobState {
@@ -151,11 +162,12 @@ func (j *Job) setState(runContext RunContext, state JobState, err error, cancelF
 }
 
 // setState sets the job state in a safe manner
-func (j *Job) setLastUpdate(lastUpdate Update) {
+func (j *Job) postUpdate(lastUpdate Update) {
 	j.stateMutex.Lock()
 	defer j.stateMutex.Unlock()
 
 	j.lastUpdate = lastUpdate
+	j.updateHistory.push(lastUpdate)
 }
 
 func (j *Job) LastUpdate() Update {
@@ -163,6 +175,13 @@ func (j *Job) LastUpdate() Update {
 	defer j.stateMutex.Unlock()
 
 	return j.lastUpdate
+}
+
+func (j *Job) UpdateHistory() []Update {
+	j.stateMutex.Lock()
+	defer j.stateMutex.Unlock()
+
+	return j.updateHistory.list()
 }
 
 // Cancel cancels a running job

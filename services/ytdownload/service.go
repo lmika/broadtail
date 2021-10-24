@@ -1,6 +1,8 @@
 package ytdownload
 
-import "github.com/lmika/broadtail/jobs"
+import (
+	"github.com/lmika/broadtail/providers/jobs"
+)
 
 type Config struct {
 	LibraryDir string

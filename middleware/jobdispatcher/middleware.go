@@ -2,7 +2,7 @@ package jobdispatcher
 
 import (
 	"context"
-	"github.com/lmika/broadtail/jobs"
+	"github.com/lmika/broadtail/providers/jobs"
 	"net/http"
 )
 

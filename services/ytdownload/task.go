@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/lmika/broadtail/jobs"
+	jobs2 "github.com/lmika/broadtail/providers/jobs"
 	"github.com/pkg/errors"
 	"os/exec"
 )
@@ -18,7 +18,7 @@ func (y *YoutubeDownloadTask) String() string {
 	return "Downloading " + y.YoutubeId
 }
 
-func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunContext) error {
+func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs2.RunContext) error {
 	downloadUrl := fmt.Sprintf("https://www.youtube.com/watch?v=%v", y.YoutubeId)
 	cmd := exec.CommandContext(ctx, "python3", "/usr/local/bin/youtube-dl", "--newline", "-f", "mp4[height<=720]", downloadUrl)
 	cmd.Dir = y.TargetDir
@@ -35,7 +35,7 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 	}
 
 	for pipeScanner.Scan() {
-		runContext.PostUpdate(jobs.Update{Status: pipeScanner.Text()})
+		runContext.PostUpdate(jobs2.Update{Status: pipeScanner.Text()})
 	}
 
 	if err := cmd.Wait(); err != nil {

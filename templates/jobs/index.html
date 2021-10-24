@@ -7,7 +7,7 @@
     <h1>Broadtail</h1>
 
     <div>
-        <h3>Jobs</h3>
+        <h3>All Jobs</h3>
 
         <table>
             <thead>
@@ -19,7 +19,7 @@
                 </tr>
             </thead>
             <tbody>
-                {{range .jobs}}
+                {{range .runningJobs}}
                 <tr>
                     <td><a href="/jobs/{{.ID}}">{{.Name}}</a></td>
                     <td>{{.State}}</td>
@@ -27,24 +27,16 @@
                     <td><a href="/jobs/{{.ID}}" data-method="DELETE" data-confirm="Cancel job?">Cancel</a></td>
                 </tr>
                 {{end}}
+                {{range .historicalJobs}}
+                <tr>
+                    <td><a href="/jobs/{{.ID}}">{{.Name}}</a></td>
+                    <td>{{.State}}</td>
+                    <td>{{.LastMessage}}</td>
+                    <td></td>
+                </tr>
+                {{end}}
             </tbody>
         </table>
-
-        <div>
-            <a href="/">Refresh</a> | <a href="/jobs">History</a> | <a href="/jobs/done" data-method="DELETE">Clear</a>
-        </div>
-    </div>
-
-    <div>
-        <form action="/job/download/youtube" method="post">
-            <div>
-                <label for="youtube_id">YouTube ID:</label>
-                <input name="youtube_id" id="youtube_id">
-            </div>
-            <div>
-                <input type="submit" value="New Job">
-            </div>
-        </form>
     </div>
 </body>
 </html>

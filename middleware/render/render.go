@@ -11,8 +11,14 @@ func HTML(r *http.Request, w http.ResponseWriter, status int, templateName strin
 		return
 	}
 
+	tmpl, err := rc.config.template(templateName)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	bw := new(bytes.Buffer)
-	if err := rc.config.Templates.ExecuteTemplate(bw, templateName, rc.values); err != nil {
+	if err := tmpl.ExecuteTemplate(bw, templateName, rc.values); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

@@ -11,10 +11,11 @@ build-linux: build-js
 	GOOS=linux go build
 
 run: build-js
-	go run . -dev
+	go run . -dev -data ./build/testdata
 
 build-js: prep
 	npm run build-js
 
 prep:
 	mkdir -p build/assets/js
+	mkdir -p build/testdata
