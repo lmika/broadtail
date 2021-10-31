@@ -1,0 +1,12 @@
+div.messages {
+    border-top: dotted thin var(--border-color);
+    border-bottom: dotted thin var(--border-color);
+    padding: 2px var(--main-horizontal-padding);
+
+    font-family: 'HackRegular', monospace;
+    font-size: 12px;
+}
+
+div.message-line {
+    margin: 1px 0;
+}

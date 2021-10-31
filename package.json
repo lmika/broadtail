@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build-js": "esbuild assets/js/main.js --bundle --outfile=build/assets/js/main.js"
+    "build-js": "esbuild assets/js/main.js --bundle --outfile=build/assets/js/main.js",
+    "watch-js": "esbuild assets/js/main.js --bundle --outfile=build/assets/js/main.js --watch",
+    "watch-css": "esbuild assets/css/main.css --bundle --outfile=build/assets/css/main.css --watch"
   },
   "author": "",
   "license": "ISC",
@@ -12,5 +14,9 @@
     "esbuild": "^0.13.8",
     "jquery": "^3.6.0",
     "jquery-ujs": "^1.2.3"
+  },
+  "rwt:targets": {
+    "build/assets/js/main.js": "assets/js/main.js",
+    "build/assets/css/main.css": "assets/css/main.css"
   }
 }

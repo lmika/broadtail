@@ -7,6 +7,7 @@ import (
 	"github.com/lmika/broadtail/middleware/ujs"
 	"github.com/lmika/broadtail/providers/jobs"
 	"github.com/lmika/broadtail/providers/stormstore"
+	"github.com/lmika/broadtail/providers/youtubedl"
 	"github.com/lmika/broadtail/services/jobsmanager"
 	"github.com/lmika/broadtail/services/ytdownload"
 	"github.com/pkg/errors"
@@ -30,16 +31,19 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 		return nil, nil, errors.Wrap(err, "cannot open job store")
 	}
 
-	ytdownloadService := ytdownload.New(ytdownload.Config{LibraryDir: config.LibraryDir})
+	youtubedlProvider := youtubedl.New()
+
+	ytdownloadService := ytdownload.New(ytdownload.Config{LibraryDir: config.LibraryDir}, youtubedlProvider)
 	jobsManager := jobsmanager.New(dispatcher, jobStore)
 	go jobsManager.Start()
 
 	indexHandlers := &indexHandlers{jobsManager: jobsManager}
-	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService}
+	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService, jobsManager: jobsManager}
 	jobsHandlers := &jobsHandlers{jobsManager: jobsManager}
 
 	r := mux.NewRouter()
 	r.Handle("/", indexHandlers.Index()).Methods("GET")
+	r.Handle("/video/details", ytdownloadHandlers.ShowDetails()).Methods("GET")
 	r.Handle("/job/download/youtube", ytdownloadHandlers.CreateDownloadJob()).Methods("POST")
 
 	r.Handle("/jobs", jobsHandlers.List()).Methods("GET")

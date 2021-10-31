@@ -1,0 +1,17 @@
+nav.main {
+    background: #BBB;
+    padding: 4px var(--main-horizontal-padding);
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+nav.main a {
+    color: #333;
+}
+
+nav.main form.quicklook {
+    display: inline-block;
+}

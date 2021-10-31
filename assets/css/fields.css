@@ -1,0 +1,25 @@
+div.fields {
+    border-top: dotted thin var(--border-color);
+    border-bottom: dotted thin var(--border-color);
+}
+
+div.field {
+    display: flex;
+    flex-direction: row;
+    align-content: stretch;
+    align-items: baseline;
+}
+
+div.field-name {
+    width: 200px;
+    flex-shrink: 0;
+    padding-right: 8px;
+    text-align: right;
+    color: #666;
+    margin: 2px;
+}
+
+div.field-value {
+    flex-grow: 1;
+    margin: 4px;
+}

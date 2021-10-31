@@ -1,0 +1,37 @@
+<div>
+    <h3>Video Details</h3>
+
+    <div class="fields">
+        <div class="field">
+            <div class="field-name">ExtID</div>
+            <div class="field-value">{{.video.ExtID}}</div>
+        </div>
+        <div class="field">
+            <div class="field-name">Title</div>
+            <div class="field-value">{{.video.Title}}</div>
+        </div>
+        <div class="field">
+            <div class="field-name">Description</div>
+            <div class="field-value">{{.video.Description}}</div>
+        </div>
+        <div class="field">
+            <div class="field-name">Thumbnail URL</div>
+            <div class="field-value">{{.video.ThumbnailURL}}</div>
+        </div>
+        <div class="field">
+            <div class="field-name">Duration</div>
+            <div class="field-value">{{.video.Duration}}</div>
+        </div>
+        <div class="field">
+            <div class="field-name">Uploaded On</div>
+            <div class="field-value">{{.video.UploadedOn}}</div>
+        </div>
+    </div>
+
+    <div class="rel-links">
+        <form action="/job/download/youtube" method="post">
+            <input type="hidden" name="youtube_id" value="{{.video.ExtID}}">
+            <input type="submit" value="Download">
+        </form>
+    </div>
+</div>

@@ -1,42 +1,32 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <script src="/public/js/main.js"></script>
-</head>
-<body>
-    <h1>Broadtail</h1>
+<div>
+    <h3>All Jobs</h3>
 
-    <div>
-        <h3>All Jobs</h3>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>Job</th>
-                    <th>State</th>
-                    <th>Last Update</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {{range .runningJobs}}
-                <tr>
-                    <td><a href="/jobs/{{.ID}}">{{.Name}}</a></td>
-                    <td>{{.State}}</td>
-                    <td>{{.LastMessage}}</td>
-                    <td><a href="/jobs/{{.ID}}" data-method="DELETE" data-confirm="Cancel job?">Cancel</a></td>
-                </tr>
-                {{end}}
-                {{range .historicalJobs}}
-                <tr>
-                    <td><a href="/jobs/{{.ID}}">{{.Name}}</a></td>
-                    <td>{{.State}}</td>
-                    <td>{{.LastMessage}}</td>
-                    <td></td>
-                </tr>
-                {{end}}
-            </tbody>
-        </table>
-    </div>
-</body>
-</html>
+    <table>
+        <thead>
+            <tr>
+                <th>Job</th>
+                <th>State</th>
+                <th>Last Update</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .runningJobs}}
+            <tr>
+                <td><a href="/jobs/{{.ID}}">{{.Name}}</a></td>
+                <td>{{.State}}</td>
+                <td>{{.LastMessage}}</td>
+                <td><a href="/jobs/{{.ID}}" data-method="DELETE" data-confirm="Cancel job?">Cancel</a></td>
+            </tr>
+            {{end}}
+            {{range .historicalJobs}}
+            <tr>
+                <td><a href="/jobs/{{.ID}}">{{.Name}}</a></td>
+                <td>{{.State}}</td>
+                <td>{{.LastMessage}}</td>
+                <td></td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>

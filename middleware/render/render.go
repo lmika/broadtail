@@ -2,6 +2,7 @@ package render
 
 import (
 	"bytes"
+	"html/template"
 	"net/http"
 )
 
@@ -11,6 +12,7 @@ func HTML(r *http.Request, w http.ResponseWriter, status int, templateName strin
 		return
 	}
 
+	// Render the content template
 	tmpl, err := rc.config.template(templateName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -23,7 +25,24 @@ func HTML(r *http.Request, w http.ResponseWriter, status int, templateName strin
 		return
 	}
 
+	// Render the master template
+	masterTmpl, err := rc.config.template("masters/frame.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	masterBw := new(bytes.Buffer)
+	if err := masterTmpl.ExecuteTemplate(masterBw, "masters/frame.html", struct{
+		Content template.HTML
+	}{
+		Content: template.HTML(bw.String()),
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-type", "text/html")
 	w.WriteHeader(status)
-	bw.WriteTo(w)
+	masterBw.WriteTo(w)
 }

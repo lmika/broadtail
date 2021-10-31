@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="/public/css/main.css">
+    <script src="/public/js/main.js"></script>
+</head>
+<body>
+<div class="frame">
+    <header>
+        <a href="/"><h1>Broadtail</h1></a>
+    </header>
+    <nav class="main">
+        <div>
+            <a href="/">Jobs</a>
+        </div>
+
+        <form class="quicklook" action="/video/details" method="get">
+            <input name="youtube_id" id="youtube_id" placeholder="Quick Look">
+            <input type="submit" value="Show">
+        </form>
+    </nav>
+
+    <article>
+        {{.Content}}
+    </article>
+</div>
+</body>
+</html>

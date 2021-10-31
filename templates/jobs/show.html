@@ -1,25 +1,38 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <script src="/public/js/main.js"></script>
-</head>
-<body>
-    <h1>Broadtail</h1>
+<div>
+    <h3>Job {{.job.ID}}</h3>
 
-    <div>
-        <h3>Job {{.job.ID}}</h3>
+    <div class="fields">
+        <div class="field">
+            <div class="field-name">Name</div>
+            <div class="field-value">{{.job.Name}}</div>
+        </div>
+        <div class="field">
+            <div class="field-name">State</div>
+            <div class="field-value">{{.job.State}}</div>
+        </div>
+        <div class="field">
+            <div class="field-name">Created At</div>
+            <div class="field-value">{{.job.CreatedAt}}</div>
+        </div>
+        <div class="field">
+            <div class="field-name">Completed At</div>
+            <div class="field-value">{{.job.CompletedAt}}</div>
+        </div>
+        <div class="field">
+            <div class="field-name">Error</div>
+            <div class="field-value">{{.job.Error}}</div>
+        </div>
+    </div>
 
-        <p>Name = {{.job.Name}}</p>
-        <p>State = {{.job.State}}</p>
-        <p>Created At = {{.job.CreatedAt}}</p>
-        <p>Completed At = {{.job.CompletedAt}}</p>
-        <p>Error = {{.job.Error}}</p>
+    <h3>Updates:</h3>
 
-        <h3>Updates:</h3>
-
+    <div class="messages">
         {{range .job.Updates}}
-            <div>{{.Message}}</div>
+            <div class="message-line">{{.Message}}</div>
         {{end}}
     </div>
-</body>
-</html>
+
+    <div class="rel-links">
+        <a href="/jobs/{{.job.ID}}">Refresh</a>
+    </div>
+</div>

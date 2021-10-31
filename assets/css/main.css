@@ -1,0 +1,51 @@
+@import url(https://fontlibrary.org//face/liberation-sans);
+@import url(https://fontlibrary.org//face/hack);
+
+@import "./vars.css";
+@import "./nav.css";
+@import "./fields.css";
+@import "./tables.css";
+@import "./messages.css";
+
+html {
+    min-height: 100%;
+    display: flex;
+
+    background: #EEF;
+}
+
+body {
+    flex-grow: 1;
+
+    font-family: 'LiberationSans', sans-serif;
+    display: flex;
+    flex-direction: column;
+
+}
+
+div.frame {
+    background: #FFF;
+    flex-grow: 1;
+    width: 800px;
+    margin: 3px auto;
+    border-radius: 6px;
+    border: solid thin var(--border-color);
+}
+
+a {
+    color: steelblue;
+    text-decoration: none;
+}
+
+header a {
+    color: black;
+    text-decoration: none;
+}
+
+header h1 {
+    margin: 12px var(--main-horizontal-padding) 8px;
+}
+
+article h3 {
+    margin: 24px var(--main-horizontal-padding) 16px;
+}
