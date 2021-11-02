@@ -5,7 +5,9 @@ import (
 	"html/template"
 	"io"
 	"io/fs"
+	"log"
 	"net/http"
+	"strings"
 	"sync"
 )
 
@@ -14,17 +16,36 @@ type Config struct {
 	useCache bool
 
 	cacheMutex *sync.RWMutex
-	templateCache map[string]*template.Template
+	templateSet *template.Template
 }
 
-func New(tmplFS fs.FS, useCache bool) *Config {
-	return &Config{
+func New(tmplFS fs.FS, useCache bool) *Config{
+	cfg := &Config{
 		templateFS: tmplFS,
 		useCache: useCache,
 
 		cacheMutex: new(sync.RWMutex),
-		templateCache: make(map[string]*template.Template),
+		templateSet: template.New("/"),
 	}
+
+	_ = fs.WalkDir(tmplFS, ".", func(path string, d fs.DirEntry, err error) error {
+		if !strings.HasSuffix(path, ".html") {
+			return  nil
+		}
+
+		tmpl, err := cfg.parseTemplate(path)
+		if err != nil {
+			log.Printf("template %v: %v", path, err)
+			return nil
+		}
+
+		if _, err := cfg.templateSet.AddParseTree(path, tmpl.Tree); err != nil {
+			log.Printf("template %v: %v", path, err)
+		}
+
+		return nil
+	})
+	return cfg
 }
 
 func (tc *Config) Use(next http.Handler) http.Handler {
@@ -38,27 +59,18 @@ func (tc *Config) Use(next http.Handler) http.Handler {
 }
 
 func (tc *Config) template(name string) (*template.Template, error) {
-	if !tc.useCache {
-		return tc.parseTemplate(name)
+	if tc.useCache {
+		tmpl, err := tc.parseTemplate(name)
+		if err != nil {
+			return nil, err
+		}
+
+		if _, err := tc.templateSet.AddParseTree(name, tmpl.Tree); err != nil {
+			return nil, err
+		}
 	}
 
-	tc.cacheMutex.RLock()
-	tmpl, hasTmpl := tc.templateCache[name]
-	tc.cacheMutex.RUnlock()
-
-	if hasTmpl {
-		return tmpl, nil
-	}
-	parsedTmpl, err := tc.parseTemplate(name)
-	if err != nil {
-		return nil, err
-	}
-
-	tc.cacheMutex.Lock()
-	tc.templateCache[name] = parsedTmpl
-	tc.cacheMutex.Unlock()
-
-	return parsedTmpl, nil
+	return tc.templateSet.Lookup(name), nil
 }
 
 func (tc *Config) parseTemplate(name string) (*template.Template, error) {

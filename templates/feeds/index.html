@@ -1,0 +1,26 @@
+<div>
+    <h3>All Feeds</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Feed</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .feeds}}
+            <tr>
+                <td><a href="/feeds/{{.ID}}">{{.Name}}</a></td>
+                <td>
+                    <a href="/feeds/{{.ID}}" data-method="DELETE" data-confirm="Delete feed?">Delete</a>
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+
+    <div class="rel-links">
+        <a href="/feeds/new">New Feed</a>
+    </div>
+</div>

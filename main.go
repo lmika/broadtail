@@ -44,6 +44,7 @@ func main() {
 		LibraryDir:     *flagLibraryDir,
 		CacheTemplates: !*flagDevMode,
 		JobDataFile:    filepath.Join(*flagDataDir, "jobs.db"),
+		FeedsDataFile:    filepath.Join(*flagDataDir, "feeds.db"),
 		TemplateFS:     templateFS,
 		AssetFS:        assetsFS,
 	})

@@ -1,0 +1,23 @@
+<div class="fields">
+    <div class="field">
+        <div class="field-name"><label>Name</label></div>
+        <div class="field-value"><input name="name" value="{{.feed.Name}}"></div>
+    </div>
+    <div class="field">
+        <div class="field-name"><label>Type</label></div>
+        <div class="field-value">
+            <select name="type">
+                <option value="youtube-channel">YouTube Channel</option>
+                <option value="youtube-playlist">YouTube Playlist</option>
+            </select>
+        </div>
+    </div>
+    <div class="field">
+        <div class="field-name"><label>External ID</label></div>
+        <div class="field-value"><input name="ext_id" value="{{.feed.ExtID}}"></div>
+    </div>
+    <div class="field">
+        <div class="field-name"></div>
+        <div class="field-value"><input type="submit" value="Save"></div>
+    </div>
+</div>

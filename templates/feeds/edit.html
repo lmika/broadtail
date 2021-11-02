@@ -1,0 +1,7 @@
+<div>
+    <h3>Edit Feeds</h3>
+
+    <form method="post" action="/feeds/{{.feed.ID}}">
+        {{template "feeds/_form.html" .}}
+    </form>
+</div>
