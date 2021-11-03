@@ -9,7 +9,9 @@ nav.main {
 }
 
 nav.main a {
+    display: inline-block;
     color: #333;
+    margin-right: 12px;
 }
 
 nav.main form.quicklook {

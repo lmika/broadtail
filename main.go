@@ -41,12 +41,11 @@ func main() {
 	}
 
 	handler, closeFn, err := handlers.Server(handlers.Config{
-		LibraryDir:     *flagLibraryDir,
-		CacheTemplates: !*flagDevMode,
-		JobDataFile:    filepath.Join(*flagDataDir, "jobs.db"),
-		FeedsDataFile:    filepath.Join(*flagDataDir, "feeds.db"),
-		TemplateFS:     templateFS,
-		AssetFS:        assetsFS,
+		LibraryDir:    *flagLibraryDir,
+		JobDataFile:   filepath.Join(*flagDataDir, "jobs.db"),
+		FeedsDataFile: filepath.Join(*flagDataDir, "feeds.db"),
+		TemplateFS:    templateFS,
+		AssetFS:       assetsFS,
 	})
 	if err != nil {
 		log.Fatalln(err)

@@ -13,16 +13,14 @@ import (
 
 type Config struct {
 	templateFS fs.FS
-	useCache bool
 
 	cacheMutex *sync.RWMutex
 	templateSet *template.Template
 }
 
-func New(tmplFS fs.FS, useCache bool) *Config{
+func New(tmplFS fs.FS) *Config{
 	cfg := &Config{
 		templateFS: tmplFS,
-		useCache: useCache,
 
 		cacheMutex: new(sync.RWMutex),
 		templateSet: template.New("/"),
@@ -59,17 +57,6 @@ func (tc *Config) Use(next http.Handler) http.Handler {
 }
 
 func (tc *Config) template(name string) (*template.Template, error) {
-	if tc.useCache {
-		tmpl, err := tc.parseTemplate(name)
-		if err != nil {
-			return nil, err
-		}
-
-		if _, err := tc.templateSet.AddParseTree(name, tmpl.Tree); err != nil {
-			return nil, err
-		}
-	}
-
 	return tc.templateSet.Lookup(name), nil
 }
 

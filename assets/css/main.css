@@ -6,6 +6,7 @@
 @import "./fields.css";
 @import "./tables.css";
 @import "./messages.css";
+@import "./form.css";
 
 html {
     min-height: 100%;

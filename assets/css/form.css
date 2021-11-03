@@ -1,0 +1,7 @@
+input.large-text-field {
+    width: calc(100% - 32px);
+}
+
+input.small-text-field {
+    width: 300px;
+}

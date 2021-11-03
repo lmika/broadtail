@@ -23,3 +23,7 @@ div.field-value {
     flex-grow: 1;
     margin: 4px;
 }
+
+div.field-value.pre-wrap {
+    white-space: pre-wrap;
+}

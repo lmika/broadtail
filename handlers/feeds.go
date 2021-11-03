@@ -48,7 +48,7 @@ func (h *feedsHandler) Create() http.Handler {
 			return err
 		}
 
-		http.Redirect(w, r, "/feeds", http.StatusSeeOther)
+		http.Redirect(w, r, "/feeds/" + feed.ID.String(), http.StatusSeeOther)
 		return nil
 	})
 }
@@ -65,7 +65,13 @@ func (h *feedsHandler) Show() http.Handler {
 			return err
 		}
 
+		recentItems, err := h.feedsManager.RecentFeedItems(ctx, feedId)
+		if err != nil {
+			return err
+		}
+
 		render.Set(r, "feed", feed)
+		render.Set(r, "recentItems", recentItems)
 		render.HTML(r, w, http.StatusOK, "feeds/show.html")
 		return nil
 	})

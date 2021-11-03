@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build-js": "esbuild assets/js/main.js --bundle --outfile=build/assets/js/main.js",
-    "build-css": "esbuild assets/js/main.js --bundle --outfile=build/assets/js/main.js",
+    "build-css": "esbuild assets/css/main.css --bundle --outfile=build/assets/css/main.css",
     "watch-js": "esbuild assets/js/main.js --bundle --outfile=build/assets/js/main.js --watch",
     "watch-css": "esbuild assets/css/main.css --bundle --outfile=build/assets/css/main.css --watch"
   },

@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lmika/broadtail/middleware/jobdispatcher"
 	"github.com/lmika/broadtail/middleware/render"
+	"github.com/lmika/broadtail/middleware/rssfetcher"
 	"github.com/lmika/broadtail/middleware/ujs"
 	"github.com/lmika/broadtail/providers/jobs"
 	"github.com/lmika/broadtail/providers/stormstore"
@@ -17,10 +18,9 @@ import (
 )
 
 type Config struct {
-	LibraryDir     string
-	CacheTemplates bool
-	JobDataFile        string
-	FeedsDataFile        string
+	LibraryDir    string
+	JobDataFile   string
+	FeedsDataFile string
 
 	TemplateFS fs.FS
 	AssetFS    fs.FS
@@ -37,11 +37,12 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "cannot open feeds store")
 	}
+	rssFetcher := rssfetcher.New()
 
 	youtubedlProvider := youtubedl.New()
 
-	ytdownloadService := ytdownload.New(ytdownload.Config{LibraryDir: config.LibraryDir}, youtubedlProvider)
-	feedsManager := feedsmanager.New(feedsStore)
+	ytdownloadService := ytdownload.New(ytdownload.Config{LibraryDir: config.LibraryDir}, youtubedlProvider, feedsStore)
+	feedsManager := feedsmanager.New(feedsStore, rssFetcher)
 	jobsManager := jobsmanager.New(dispatcher, jobStore)
 	go jobsManager.Start()
 
@@ -66,7 +67,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 
 	handler = ujs.MethodRewriteHandler(r)
 	handler = jobdispatcher.New(dispatcher).Use(handler)
-	handler = render.New(config.TemplateFS, config.CacheTemplates).Use(handler)
+	handler = render.New(config.TemplateFS).Use(handler)
 
 	closeFn = func() {
 		jobStore.Close()

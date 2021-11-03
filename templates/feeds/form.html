@@ -1,7 +1,7 @@
 <div class="fields">
     <div class="field">
         <div class="field-name"><label>Name</label></div>
-        <div class="field-value"><input name="name" value="{{.feed.Name}}"></div>
+        <div class="field-value"><input name="name" value="{{.feed.Name}}" class="large-text-field"></div>
     </div>
     <div class="field">
         <div class="field-name"><label>Type</label></div>
@@ -14,7 +14,11 @@
     </div>
     <div class="field">
         <div class="field-name"><label>External ID</label></div>
-        <div class="field-value"><input name="ext_id" value="{{.feed.ExtID}}"></div>
+        <div class="field-value"><input name="ext_id" value="{{.feed.ExtID}}" class="small-text-field"></div>
+    </div>
+    <div class="field">
+        <div class="field-name"><label>Target Dir</label></div>
+        <div class="field-value"><input name="target_dir" value="{{.feed.TargetDir}}" class="large-text-field"></div>
     </div>
     <div class="field">
         <div class="field-name"></div>

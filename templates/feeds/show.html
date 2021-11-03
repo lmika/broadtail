@@ -1,3 +1,4 @@
+{{ $feed := .feed }}
 <div>
     <h3>Feed: {{.feed.Name}}</h3>
 
@@ -11,6 +12,10 @@
             <div class="field-value">{{.feed.ExtID}}</div>
         </div>
         <div class="field">
+            <div class="field-name"><label>Target Dir</label></div>
+            <div class="field-value">{{.feed.TargetDir}}</div>
+        </div>
+        <div class="field">
             <div class="field-name"><label>Created At</label></div>
             <div class="field-value">{{.feed.CreatedAt}}</div>
         </div>
@@ -18,4 +23,23 @@
     <div class="rel-links">
         <a href="/feeds/{{.feed.ID}}/edit">Edit</a>
     </div>
+
+    <h3>Recent Items</h3>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Title</th>
+            <th>Published</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{range .recentItems}}
+        <tr>
+            <td><a href="/video/details?youtube_id={{.VideoID}}&from_feed_id={{$feed.ID}}">{{.Title}}</a></td>
+            <td>{{.Published.Format "2006-01-02 15:04:05 MST"}}</td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table>
 </div>

@@ -6,16 +6,17 @@ import (
 	"time"
 )
 
-const(
-	FeedTypeYoutubeChannel = "youtube-channel"
+const (
+	FeedTypeYoutubeChannel  = "youtube-channel"
 	FeedTypeYoutubePlaylist = "youtube-playlist"
 )
 
 type Feed struct {
-	ID    uuid.UUID `storm:"unique"`
-	Name  string    `req:"name"`
-	Type  string    `req:"type"`
-	ExtID string    `req:"ext_id"`
+	ID        uuid.UUID `storm:"unique"`
+	Name      string    `req:"name"`
+	Type      string    `req:"type"`
+	ExtID     string    `req:"ext_id"`
+	TargetDir string    `req:"target_dir"`
 	CreatedAt time.Time
 }
 
