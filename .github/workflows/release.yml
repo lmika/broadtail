@@ -18,7 +18,6 @@ jobs:
       - name: Build
         run: |
           set -xue          
-          go get .
           npm install
           make build
       - name: Release
