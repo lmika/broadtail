@@ -68,7 +68,7 @@ func (p *Provider) DownloadVideo(ctx context.Context, options models.DownloadOpt
 }
 
 func (yd *Provider) videoMetadata(ctx context.Context, youtubeVideoID string) (metadataJson, error) {
-	cmd := exec.CommandContext(ctx, "python3", "/usr/local/bin/youtube-dl", "--dump-json", youtubeVideoID)
+	cmd := exec.CommandContext(ctx, "python3", "/usr/local/bin/youtube-dl", "--dump-json", "--", youtubeVideoID)
 	output, err := cmd.Output()
 
 	if err != nil {

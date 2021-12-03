@@ -31,7 +31,7 @@
     <div class="rel-links">
         <form action="/job/download/youtube" method="post">
             <input type="hidden" name="youtube_id" value="{{.video.ExtID}}">
-            {{if ne .fromFeedID ""}}
+            {{if .fromFeedID}}
                 <input type="hidden" name="from_feed_id" value="{{.fromFeedID}}">
             {{end}}
             <input type="submit" value="Download">
