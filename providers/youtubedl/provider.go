@@ -6,17 +6,28 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/lmika/broadtail/models"
-	"github.com/pkg/errors"
 	"log"
 	"os/exec"
+
+	"github.com/lmika/broadtail/models"
+	"github.com/pkg/errors"
 )
 
 type Provider struct {
 }
 
-func New() *Provider {
-	return &Provider{}
+func New() (*Provider, error) {
+	provider := &Provider{}
+	if err := provider.checkAvailable(); err != nil {
+		return nil, err
+	}
+
+	return provider, nil
+}
+
+func (p *Provider) checkAvailable() error {
+	cmd := exec.Command("python3", "/usr/local/bin/youtube-dl", "--version")
+	return errors.Wrap(cmd.Run(), "youtube-dl is not available")
 }
 
 func (p *Provider) GetVideoMetadata(ctx context.Context, youtubeId string) (*models.Video, error) {
@@ -28,7 +39,7 @@ func (p *Provider) GetVideoMetadata(ctx context.Context, youtubeId string) (*mod
 	// Decode the upload date
 	uploadDate, err := jsonData.UploadDate()
 	if err != nil {
-		log.Printf("invalid upload date '%v': %v", jsonData.UploadDate, err)
+		log.Printf("invalid upload date '%v': %v", uploadDate, err)
 	}
 
 	return &models.Video{

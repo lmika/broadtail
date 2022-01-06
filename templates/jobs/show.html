@@ -10,6 +10,16 @@
             <div class="field-name">State</div>
             <div class="field-value">{{.job.State}}</div>
         </div>
+        {{if .job.VideoExtID}}
+            <div class="field">
+                <div class="field-name">Video</div>
+                {{if .job.VideoTitle}}
+                    <div class="field-value"><a href="/video/details?youtube_id={{.job.VideoExtID}}">{{.job.VideoTitle}}</a></div>
+                {{else}}
+                    <div class="field-value"><a href="/video/details?youtube_id={{.job.VideoExtID}}">Title Unknown ({{.job.VideoExtID}})</a></div>
+                {{end}}
+            </div>
+        {{end}}
         <div class="field">
             <div class="field-name">Created At</div>
             <div class="field-value">{{.job.CreatedAt}}</div>
@@ -24,7 +34,7 @@
         </div>
     </div>
 
-    <h3>Updates:</h3>
+    <h3>Updates</h3>
 
     <div class="messages">
         {{range .job.Updates}}

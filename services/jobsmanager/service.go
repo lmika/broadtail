@@ -1,13 +1,14 @@
 package jobsmanager
 
 import (
+	"log"
+	"sort"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/providers/jobs"
 	"github.com/pkg/errors"
-	"log"
-	"sort"
-	"time"
 )
 
 type JobStore interface {
@@ -36,7 +37,6 @@ func (jm *JobsManager) Start() {
 		defer sub.Close()
 
 		for event := range sub.Chan() {
-			log.Printf("received event: %v", event)
 			switch e := event.(type) {
 			case jobs.StateTransitionSubscriptionEvent:
 				if e.ToState.Terminal() {
@@ -92,6 +92,11 @@ func (jm *JobsManager) toJob(job *jobs.Job, updateHistory bool) models.Job {
 		CreatedAt: job.CreatedAt(),
 		State:     job.State(),
 	}
+	if videoDownloadTask, isVideoDownloadTask := job.Task().(VideoDownloadTask); isVideoDownloadTask {
+		modelJob.VideoExtID = videoDownloadTask.VideoExtID()
+		modelJob.VideoTitle = videoDownloadTask.VideoTitle()
+	}
+
 	if err := job.Err(); err != nil {
 		modelJob.Error = err.Error()
 	}

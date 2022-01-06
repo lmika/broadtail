@@ -2,10 +2,11 @@ package ytdownload
 
 import (
 	"context"
+	"path/filepath"
+
 	"github.com/google/uuid"
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/providers/jobs"
-	"path/filepath"
 )
 
 type Config struct {
@@ -13,15 +14,15 @@ type Config struct {
 }
 
 type Service struct {
-	config Config
-	provider Provider
+	config    Config
+	provider  Provider
 	feedStore FeedStore
 }
 
 func New(config Config, provider Provider, feedStore FeedStore) *Service {
 	return &Service{
-		config: config,
-		provider: provider,
+		config:    config,
+		provider:  provider,
 		feedStore: feedStore,
 	}
 }
@@ -41,9 +42,11 @@ func (s *Service) NewYoutubeDownloadTask(ctx context.Context, youtubeId string, 
 		targetDir = filepath.Join(s.config.LibraryDir, feed.TargetDir)
 	}
 
-	return &YoutubeDownloadTask{
-		Provider: s.provider,
+	task := &YoutubeDownloadTask{
+		Provider:  s.provider,
 		YoutubeId: youtubeId,
 		TargetDir: targetDir,
-	}, nil
+	}
+	task.Init()
+	return task, nil
 }

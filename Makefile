@@ -13,7 +13,7 @@ build-linux: build-js
 run: prep
 	(sleep 99999 | npm run watch-js &)
 	(sleep 99999 | npm run watch-css &)
-	go run . -dev -data ./build/testdata
+	go run . -dev -data ./build/testdata -ytdl-simulator
 
 build-js: prep
 	npm run build-js

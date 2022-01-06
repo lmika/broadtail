@@ -1,6 +1,10 @@
 package handlers
 
 import (
+	"io/fs"
+	"log"
+	"net/http"
+
 	"github.com/gorilla/mux"
 	"github.com/lmika/broadtail/middleware/jobdispatcher"
 	"github.com/lmika/broadtail/middleware/render"
@@ -9,18 +13,18 @@ import (
 	"github.com/lmika/broadtail/providers/jobs"
 	"github.com/lmika/broadtail/providers/stormstore"
 	"github.com/lmika/broadtail/providers/youtubedl"
+	"github.com/lmika/broadtail/providers/ytdlsimulator"
 	"github.com/lmika/broadtail/services/feedsmanager"
 	"github.com/lmika/broadtail/services/jobsmanager"
 	"github.com/lmika/broadtail/services/ytdownload"
 	"github.com/pkg/errors"
-	"io/fs"
-	"net/http"
 )
 
 type Config struct {
-	LibraryDir    string
-	JobDataFile   string
-	FeedsDataFile string
+	LibraryDir          string
+	JobDataFile         string
+	FeedsDataFile       string
+	YTDownloadSimulator bool
 
 	TemplateFS fs.FS
 	AssetFS    fs.FS
@@ -39,7 +43,16 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	}
 	rssFetcher := rssfetcher.New()
 
-	youtubedlProvider := youtubedl.New()
+	var youtubedlProvider ytdownload.Provider
+	if config.YTDownloadSimulator {
+		log.Println("Using youtuble-dl simulator")
+		youtubedlProvider = ytdlsimulator.New()
+	} else {
+		youtubedlProvider, err = youtubedl.New()
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "cannot instantiate youtube-dl provider")
+		}
+	}
 
 	ytdownloadService := ytdownload.New(ytdownload.Config{LibraryDir: config.LibraryDir}, youtubedlProvider, feedsStore)
 	feedsManager := feedsmanager.New(feedsStore, rssFetcher)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/lmika/broadtail/handlers"
 	"io/fs"
 	"log"
 	"net/http"
@@ -12,6 +11,8 @@ import (
 	"os/signal"
 	"path/filepath"
 	"time"
+
+	"github.com/lmika/broadtail/handlers"
 )
 
 func main() {
@@ -20,6 +21,7 @@ func main() {
 	flagPort := flag.Int("p", 3690, "port")
 	flagDataDir := flag.String("data", ".", "data dir")
 	flagLibraryDir := flag.String("library", "", "library dir")
+	flagYTDLSimulator := flag.Bool("ytdl-simulator", false, "use youtube-dl simulator (for dev)")
 	flag.Parse()
 
 	var templateFS, assetsFS fs.FS
@@ -41,11 +43,12 @@ func main() {
 	}
 
 	handler, closeFn, err := handlers.Server(handlers.Config{
-		LibraryDir:    *flagLibraryDir,
-		JobDataFile:   filepath.Join(*flagDataDir, "jobs.db"),
-		FeedsDataFile: filepath.Join(*flagDataDir, "feeds.db"),
-		TemplateFS:    templateFS,
-		AssetFS:       assetsFS,
+		LibraryDir:          *flagLibraryDir,
+		JobDataFile:         filepath.Join(*flagDataDir, "jobs.db"),
+		FeedsDataFile:       filepath.Join(*flagDataDir, "feeds.db"),
+		YTDownloadSimulator: *flagYTDLSimulator,
+		TemplateFS:          templateFS,
+		AssetFS:             assetsFS,
 	})
 	if err != nil {
 		log.Fatalln(err)
