@@ -3,9 +3,15 @@
 
     <div class="fields">
         <div class="field">
-            <div class="field-name">ExtID</div>
-            <div class="field-value">{{.video.ExtID}}</div>
+            <div class="field-name">Video ID</div>
+            <div class="field-value"><a href="https://www.youtube.com/watch?v={{.video.ExtID}}">{{.video.ExtID}}</a></div>
         </div>
+        {{if .video.ChannelID}}
+            <div class="field">
+                <div class="field-name">Channel</div>
+                <div class="field-value"><a href="https://www.youtube.com/channel/{{.video.ChannelID}}">{{.video.ChannelName}}</a></div>
+            </div>
+        {{end}}
         <div class="field">
             <div class="field-name">Title</div>
             <div class="field-value">{{.video.Title}}</div>

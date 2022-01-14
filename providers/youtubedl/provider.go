@@ -45,6 +45,8 @@ func (p *Provider) GetVideoMetadata(ctx context.Context, youtubeId string) (*mod
 	return &models.Video{
 		ExtID:        youtubeId,
 		Title:        jsonData.Title,
+		ChannelID:    jsonData.ChannelID,
+		ChannelName:  jsonData.Channel,
 		Description:  jsonData.Description,
 		ThumbnailURL: jsonData.ThumbnailURL,
 		UploadedOn:   uploadDate,

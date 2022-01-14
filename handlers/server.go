@@ -61,13 +61,16 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 
 	indexHandlers := &indexHandlers{jobsManager: jobsManager}
 	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService, jobsManager: jobsManager}
+	detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService}
 	jobsHandlers := &jobsHandlers{jobsManager: jobsManager}
 	feedsHandlers := &feedsHandler{feedsManager: feedsManager}
 
 	r := mux.NewRouter()
 	r.Handle("/", indexHandlers.Index()).Methods("GET")
-	r.Handle("/video/details", ytdownloadHandlers.ShowDetails()).Methods("GET")
 	r.Handle("/job/download/youtube", ytdownloadHandlers.CreateDownloadJob()).Methods("POST")
+
+	r.Handle("/quicklook", detailsHandler.QuickLook()).Methods("GET")
+	r.Handle("/details/video/{video_id}", detailsHandler.VideoDetails()).Methods("GET")
 
 	r.Handle("/jobs", jobsHandlers.List()).Methods("GET")
 	r.Handle("/jobs/done", jobsHandlers.ClearDone()).Methods("DELETE")

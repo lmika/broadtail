@@ -8,6 +8,8 @@ import (
 type Video struct {
 	ID           uuid.UUID `storm:"unique"`
 	ExtID        string
+	ChannelID    string
+	ChannelName  string
 	Title        string
 	Description  string
 	ThumbnailURL string
