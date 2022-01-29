@@ -6,19 +6,21 @@ import (
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/models/ytrss"
 	"github.com/pkg/errors"
-	"sort"
+	"log"
 	"time"
 )
 
 type FeedsManager struct {
-	store FeedStore
-	feedProvider RSSFetcher
+	store         FeedStore
+	feedItemStore FeedItemStore
+	rssFeedSource RSSFetcher
 }
 
-func New(store FeedStore, feedProvider RSSFetcher) *FeedsManager {
+func New(store FeedStore, feedProvider FeedItemStore, rssFeedSource RSSFetcher) *FeedsManager {
 	return &FeedsManager{
-		store: store,
-		feedProvider: feedProvider,
+		store:         store,
+		feedItemStore: feedProvider,
+		rssFeedSource: rssFeedSource,
 	}
 }
 
@@ -42,27 +44,61 @@ func (fm *FeedsManager) Delete(ctx context.Context, id uuid.UUID) error {
 	return fm.store.Delete(ctx, id)
 }
 
-func (fm *FeedsManager) RecentFeedItems(ctx context.Context, id uuid.UUID) (entries []ytrss.Entry, err error) {
-	feed, err := fm.store.Get(ctx, id)
+func (fm *FeedsManager) UpdateFeed(ctx context.Context, id uuid.UUID) error {
+	feed, err := fm.Get(ctx, id)
 	if err != nil {
-		return nil, err
+		return errors.Wrapf(err, "cannot get feed")
 	}
 
-	switch feed.Type {
-	case models.FeedTypeYoutubeChannel:
-		entries, err = fm.feedProvider.GetForChannelID(ctx, feed.ExtID)
-	case models.FeedTypeYoutubePlaylist:
-		entries, err = fm.feedProvider.GetForPlaylistID(ctx, feed.ExtID)
-	default:
-		return nil, errors.Errorf("unrecognised feed type: %v", feed.Type)
-	}
+	rssItems, err := fm.rssFeedSource.GetForFeed(ctx, feed)
 	if err != nil {
-		return nil, err
+		return errors.Wrapf(err, "cannot get feed items from source")
 	}
 
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].Published.After(entries[j].Published)
-	})
+	for _, item := range rssItems {
+		feedItem := fm.sourceEntryToFeedItem(&feed, item)
+		if err := fm.feedItemStore.PutIfAbsent(ctx, &feedItem); err != nil {
+			log.Printf("warn: cannot save item %v: %v", feedItem.VideoID, err)
+		}
+	}
 
-	return entries, nil
+	return nil
+}
+
+func (fm *FeedsManager) sourceEntryToFeedItem(feed *models.Feed, entry ytrss.Entry) models.FeedItem {
+	return models.FeedItem{
+		FeedID:    feed.ID,
+		EntryID:   entry.VideoID,
+		Title:     entry.Title,
+		Link:      entry.Link,
+		Published: entry.Published,
+	}
+}
+
+func (fm *FeedsManager) RecentFeedItems(ctx context.Context, id uuid.UUID) (entries []models.FeedItem, err error) {
+	return fm.feedItemStore.ListRecent(ctx, id)
+	/*
+		feed, err := fm.store.Get(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+
+		switch feed.Type {
+		case models.FeedTypeYoutubeChannel:
+			entries, err = fm.feedItemStore.GetForChannelID(ctx, feed.ExtID)
+		case models.FeedTypeYoutubePlaylist:
+			entries, err = fm.feedItemStore.GetForPlaylistID(ctx, feed.ExtID)
+		default:
+			return nil, errors.Errorf("unrecognised feed type: %v", feed.Type)
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		sort.Slice(entries, func(i, j int) bool {
+			return entries[i].Published.After(entries[j].Published)
+		})
+
+		return entries, nil
+	*/
 }

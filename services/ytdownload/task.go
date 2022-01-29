@@ -3,6 +3,7 @@ package ytdownload
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/lmika/broadtail/models"
@@ -45,6 +46,11 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 	}
 
 	y.setTitle(metadata.Title)
+
+	// Create the directory
+	if err := os.MkdirAll(y.TargetDir, 0755); err != nil {
+		return errors.Wrapf(err, "cannot create target directory: %v", y.TargetDir)
+	}
 
 	return y.Provider.DownloadVideo(ctx, models.DownloadOptions{
 		YoutubeID: y.YoutubeId,

@@ -24,6 +24,7 @@ type Config struct {
 	LibraryDir          string
 	JobDataFile         string
 	FeedsDataFile       string
+	FeedItemsDataFile   string
 	YTDownloadSimulator bool
 
 	TemplateFS fs.FS
@@ -41,6 +42,10 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "cannot open feeds store")
 	}
+	feedItemStore, err := stormstore.NewFeedItemStore(config.FeedItemsDataFile)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cannot open feeds store")
+	}
 	rssFetcher := rssfetcher.New()
 
 	var youtubedlProvider ytdownload.Provider
@@ -55,7 +60,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	}
 
 	ytdownloadService := ytdownload.New(ytdownload.Config{LibraryDir: config.LibraryDir}, youtubedlProvider, feedsStore)
-	feedsManager := feedsmanager.New(feedsStore, rssFetcher)
+	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher)
 	jobsManager := jobsmanager.New(dispatcher, jobStore)
 	go jobsManager.Start()
 

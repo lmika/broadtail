@@ -46,6 +46,7 @@ func main() {
 		LibraryDir:          *flagLibraryDir,
 		JobDataFile:         filepath.Join(*flagDataDir, "jobs.db"),
 		FeedsDataFile:       filepath.Join(*flagDataDir, "feeds.db"),
+		FeedItemsDataFile:   filepath.Join(*flagDataDir, "feeditem.db"),
 		YTDownloadSimulator: *flagYTDLSimulator,
 		TemplateFS:          templateFS,
 		AssetFS:             assetsFS,

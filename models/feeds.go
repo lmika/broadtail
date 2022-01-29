@@ -12,7 +12,7 @@ const (
 )
 
 type Feed struct {
-	ID        uuid.UUID `storm:"unique"`
+	ID        uuid.UUID `storm:"id"`
 	Name      string    `req:"name"`
 	Type      string    `req:"type"`
 	ExtID     string    `req:"ext_id"`
@@ -26,4 +26,14 @@ func (f Feed) Validate() error {
 		validation.Field(&f.Type, validation.In(FeedTypeYoutubeChannel, FeedTypeYoutubePlaylist)),
 		validation.Field(&f.ExtID, validation.Required),
 	)
+}
+
+type FeedItem struct {
+	ID        uuid.UUID `storm:"id"`
+	EntryID   string    `storm:"unique"`
+	FeedID    uuid.UUID `storm:"index"`
+	VideoID   string
+	Title     string
+	Link      string
+	Published time.Time
 }

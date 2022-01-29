@@ -21,6 +21,7 @@
         </div>
     </div>
     <div class="rel-links">
+        <a href="/feeds/{{.feed.ID}}/refresh" data-method="POST">Refresh</a>
         <a href="/feeds/{{.feed.ID}}/edit">Edit</a>
     </div>
 
@@ -36,7 +37,7 @@
         <tbody>
         {{range .recentItems}}
         <tr>
-            <td><a href="/details/video/{{.VideoID}}&from_feed_id={{$feed.ID}}">{{.Title}}</a></td>
+            <td><a href="/details/video/{{.EntryID}}?from_feed_id={{$feed.ID}}">{{.Title}}</a></td>
             <td>{{.Published.Format "2006-01-02 15:04:05 MST"}}</td>
         </tr>
         {{end}}
