@@ -38,7 +38,7 @@ func NewFeedItemStore(filename string) (*FeedItemStore, error) {
 }
 
 func (f *FeedItemStore) ListRecent(ctx context.Context, feedID uuid.UUID) (feedItems []models.FeedItem, err error) {
-	err = f.db.Select().OrderBy("Published").Limit(50).Find(&feedItems)
+	err = f.db.Select(q.Eq("FeedID", feedID)).OrderBy("Published").Reverse().Limit(50).Find(&feedItems)
 	if err == storm.ErrNotFound {
 		return []models.FeedItem{}, nil
 	}
