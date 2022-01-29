@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"github.com/mergestat/timediff"
 	"github.com/robfig/cron"
 	"html/template"
@@ -112,6 +113,15 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 					return timediff.TimeDiff(t)
 				}
 				return t.Format("2006-01-02 15:04:05 MST")
+			},
+			"formatDurationSec": func(durationInSecs int) string {
+				hrs := durationInSecs / 3600
+				mins := (durationInSecs / 60) % 60
+				secs := durationInSecs % 60
+				if hrs > 0 {
+					return fmt.Sprintf("%d:%02d:%02d", hrs, mins, secs)
+				}
+				return fmt.Sprintf("%d:%02d", mins, secs)
 			},
 		}),
 	).Use(handler)

@@ -1,6 +1,10 @@
 <div>
-    <h3>Video Details</h3>
+    <h3>Video: {{.video.Title}}</h3>
 
+    <div class="fields">
+        <img class="thumbnail" src="{{.video.ThumbnailURL}}">
+        <div class="pre-wrap">{{.video.Description}}</div>
+    </div>
     <div class="fields">
         <div class="field">
             <div class="field-name">Video ID</div>
@@ -13,26 +17,15 @@
             </div>
         {{end}}
         <div class="field">
-            <div class="field-name">Title</div>
-            <div class="field-value">{{.video.Title}}</div>
-        </div>
-        <div class="field">
-            <div class="field-name">Description</div>
-            <div class="field-value pre-wrap">{{.video.Description}}</div>
-        </div>
-        <div class="field">
-            <div class="field-name">Thumbnail URL</div>
-            <div class="field-value">{{.video.ThumbnailURL}}</div>
+            <div class="field-name">Uploaded On</div>
+            <div class="field-value">{{formatTime .video.UploadedOn}}</div>
         </div>
         <div class="field">
             <div class="field-name">Duration</div>
-            <div class="field-value">{{.video.Duration}}</div>
-        </div>
-        <div class="field">
-            <div class="field-name">Uploaded On</div>
-            <div class="field-value">{{.video.UploadedOn}}</div>
+            <div class="field-value">{{formatDurationSec .video.Duration}}</div>
         </div>
     </div>
+
 
     <div class="rel-links">
         <form action="/job/download/youtube" method="post">
