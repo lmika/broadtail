@@ -1,9 +1,14 @@
 package handlers
 
 import (
+	"context"
+	"github.com/mergestat/timediff"
+	"github.com/robfig/cron"
+	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/lmika/broadtail/middleware/jobdispatcher"
@@ -64,6 +69,14 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	jobsManager := jobsmanager.New(dispatcher, jobStore)
 	go jobsManager.Start()
 
+	// Schedule updates every 15 minutes
+	c := cron.New()
+	if err := c.AddFunc("@every 30m", func() {
+		feedsManager.UpdateAllFeeds(context.Background())
+	}); err != nil {
+		return nil, nil, errors.Wrap(err, "invalid feed update schedule")
+	}
+
 	indexHandlers := &indexHandlers{jobsManager: jobsManager}
 	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService, jobsManager: jobsManager}
 	detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService}
@@ -88,7 +101,20 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 
 	handler = ujs.MethodRewriteHandler(r)
 	handler = jobdispatcher.New(dispatcher).Use(handler)
-	handler = render.New(config.TemplateFS).Use(handler)
+	handler = render.New(
+		config.TemplateFS,
+		render.WithFuncs(template.FuncMap{
+			"formatTime": func(t time.Time) string {
+				if t.IsZero() {
+					return "never"
+				}
+				if dur := time.Since(t); dur < time.Duration(5*24)*time.Hour {
+					return timediff.TimeDiff(t)
+				}
+				return t.Format("2006-01-02 15:04:05 MST")
+			},
+		}),
+	).Use(handler)
 
 	closeFn = func() {
 		jobStore.Close()

@@ -17,7 +17,11 @@
         </div>
         <div class="field">
             <div class="field-name"><label>Created At</label></div>
-            <div class="field-value">{{.feed.CreatedAt}}</div>
+            <div class="field-value">{{formatTime .feed.CreatedAt}}</div>
+        </div>
+        <div class="field">
+            <div class="field-name"><label>Last Updated</label></div>
+            <div class="field-value">{{formatTime .feed.LastUpdatedAt}}</div>
         </div>
     </div>
     <div class="rel-links">
@@ -31,14 +35,14 @@
         <thead>
         <tr>
             <th>Title</th>
-            <th>Published</th>
+            <th class="datetime">Published</th>
         </tr>
         </thead>
         <tbody>
         {{range .recentItems}}
         <tr>
             <td><a href="/details/video/{{.EntryID}}?from_feed_id={{$feed.ID}}">{{.Title}}</a></td>
-            <td>{{.Published.Format "2006-01-02 15:04:05 MST"}}</td>
+            <td  class="datetime">{{formatTime .Published}}</td>
         </tr>
         {{end}}
         </tbody>

@@ -20,7 +20,5 @@ type FeedItemStore interface {
 }
 
 type RSSFetcher interface {
-	//GetForChannelID(ctx context.Context, channelID string) ([]ytrss.Entry, error)
-	//GetForPlaylistID(ctx context.Context, playlistID string) ([]ytrss.Entry, error)
 	GetForFeed(ctx context.Context, feed models.Feed) ([]ytrss.Entry, error)
 }

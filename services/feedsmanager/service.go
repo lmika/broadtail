@@ -7,6 +7,7 @@ import (
 	"github.com/lmika/broadtail/models/ytrss"
 	"github.com/pkg/errors"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -14,13 +15,16 @@ type FeedsManager struct {
 	store         FeedStore
 	feedItemStore FeedItemStore
 	rssFeedSource RSSFetcher
+
+	feedUpdateMutex *sync.Mutex
 }
 
 func New(store FeedStore, feedProvider FeedItemStore, rssFeedSource RSSFetcher) *FeedsManager {
 	return &FeedsManager{
-		store:         store,
-		feedItemStore: feedProvider,
-		rssFeedSource: rssFeedSource,
+		store:           store,
+		feedItemStore:   feedProvider,
+		rssFeedSource:   rssFeedSource,
+		feedUpdateMutex: new(sync.Mutex),
 	}
 }
 
@@ -50,6 +54,28 @@ func (fm *FeedsManager) UpdateFeed(ctx context.Context, id uuid.UUID) error {
 		return errors.Wrapf(err, "cannot get feed")
 	}
 
+	return fm.updateFeedItems(ctx, feed)
+}
+
+func (fm *FeedsManager) UpdateAllFeeds(ctx context.Context) error {
+	allFeeds, err := fm.store.List(ctx)
+	if err != nil {
+		return errors.Wrap(err, "cannot get all feeds")
+	}
+
+	for _, feed := range allFeeds {
+		if err := fm.updateFeedItems(ctx, feed); err != nil {
+			log.Printf("unable to update feed: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (fm *FeedsManager) updateFeedItems(ctx context.Context, feed models.Feed) error {
+	fm.feedUpdateMutex.Lock()
+	defer fm.feedUpdateMutex.Unlock()
+
 	rssItems, err := fm.rssFeedSource.GetForFeed(ctx, feed)
 	if err != nil {
 		return errors.Wrapf(err, "cannot get feed items from source")
@@ -60,6 +86,11 @@ func (fm *FeedsManager) UpdateFeed(ctx context.Context, id uuid.UUID) error {
 		if err := fm.feedItemStore.PutIfAbsent(ctx, &feedItem); err != nil {
 			log.Printf("warn: cannot save item %v: %v", feedItem.VideoID, err)
 		}
+	}
+
+	feed.LastUpdatedAt = time.Now()
+	if err := fm.store.Save(ctx, &feed); err != nil {
+		return errors.Wrap(err, "cannot update feed")
 	}
 
 	return nil
@@ -77,28 +108,4 @@ func (fm *FeedsManager) sourceEntryToFeedItem(feed *models.Feed, entry ytrss.Ent
 
 func (fm *FeedsManager) RecentFeedItems(ctx context.Context, id uuid.UUID) (entries []models.FeedItem, err error) {
 	return fm.feedItemStore.ListRecent(ctx, id)
-	/*
-		feed, err := fm.store.Get(ctx, id)
-		if err != nil {
-			return nil, err
-		}
-
-		switch feed.Type {
-		case models.FeedTypeYoutubeChannel:
-			entries, err = fm.feedItemStore.GetForChannelID(ctx, feed.ExtID)
-		case models.FeedTypeYoutubePlaylist:
-			entries, err = fm.feedItemStore.GetForPlaylistID(ctx, feed.ExtID)
-		default:
-			return nil, errors.Errorf("unrecognised feed type: %v", feed.Type)
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		sort.Slice(entries, func(i, j int) bool {
-			return entries[i].Published.After(entries[j].Published)
-		})
-
-		return entries, nil
-	*/
 }

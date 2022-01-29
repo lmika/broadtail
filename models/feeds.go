@@ -12,12 +12,13 @@ const (
 )
 
 type Feed struct {
-	ID        uuid.UUID `storm:"id"`
-	Name      string    `req:"name"`
-	Type      string    `req:"type"`
-	ExtID     string    `req:"ext_id"`
-	TargetDir string    `req:"target_dir"`
-	CreatedAt time.Time
+	ID            uuid.UUID `storm:"id"`
+	Name          string    `req:"name"`
+	Type          string    `req:"type"`
+	ExtID         string    `req:"ext_id"`
+	TargetDir     string    `req:"target_dir"`
+	CreatedAt     time.Time
+	LastUpdatedAt time.Time
 }
 
 func (f Feed) Validate() error {
