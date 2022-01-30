@@ -80,7 +80,6 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	// Schedule updates every 15 minutes
 	c := cron.New()
 	if err := c.AddFunc("@every 15m", func() {
-		log.Println("Updating all feeds")
 		if err := feedsManager.UpdateAllFeeds(context.Background()); err != nil {
 			log.Printf("error updating all feeds: %v", err)
 		}
