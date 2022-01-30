@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"path/filepath"
+	"strings"
 
 	"github.com/lmika/broadtail/models"
 	"github.com/pkg/errors"
@@ -54,20 +56,33 @@ func (p *Provider) GetVideoMetadata(ctx context.Context, youtubeId string) (*mod
 	}, nil
 }
 
-func (p *Provider) DownloadVideo(ctx context.Context, options models.DownloadOptions, logline func(line string)) error {
+func (p *Provider) DownloadVideo(ctx context.Context, options models.DownloadOptions, logline func(line string)) (string, error) {
+	const filenameFormat = "%(title)s.%(id)s.%(ext)s"
+
+	// Get the expected filename
 	downloadUrl := fmt.Sprintf("https://www.youtube.com/watch?v=%v", options.YoutubeID)
-	cmd := exec.CommandContext(ctx, "python3", "/usr/local/bin/youtube-dl", "--newline", "-f", "mp4[height<=720]", downloadUrl)
+	filenameCmd := exec.CommandContext(ctx, "python3", "/usr/local/bin/youtube-dl",
+		"--get-filename", "-o", filenameFormat, "--restrict-filenames", downloadUrl)
+	out, err := filenameCmd.Output()
+	if err != nil {
+		return "", errors.Wrap(err, "unable to determine target filename")
+	}
+	outFilename := strings.TrimSpace(string(out))
+
+	cmd := exec.CommandContext(ctx, "python3", "/usr/local/bin/youtube-dl",
+		"-o", filenameFormat, "--restrict-filenames",
+		"--newline", "-f", "mp4[height<=720]", downloadUrl)
 	cmd.Dir = options.TargetDir
 
 	stderrPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		return errors.Wrap(err, "cannot open pipe to stderr")
+		return "", errors.Wrap(err, "cannot open pipe to stderr")
 	}
 
 	pipeScanner := bufio.NewScanner(stderrPipe)
 
 	if err := cmd.Start(); err != nil {
-		return errors.Wrap(err, "cannot start process")
+		return "", errors.Wrap(err, "cannot start process")
 	}
 
 	for pipeScanner.Scan() {
@@ -75,9 +90,11 @@ func (p *Provider) DownloadVideo(ctx context.Context, options models.DownloadOpt
 	}
 
 	if err := cmd.Wait(); err != nil {
-		return errors.Wrap(err, "caught error waiting for process")
+		return "", errors.Wrap(err, "caught error waiting for process")
 	}
-	return nil
+
+	outputFile := filepath.Join(options.TargetDir, outFilename)
+	return outputFile, nil
 }
 
 func (yd *Provider) videoMetadata(ctx context.Context, youtubeVideoID string) (metadataJson, error) {

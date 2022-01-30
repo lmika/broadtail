@@ -3,6 +3,7 @@ div.fields {
     border-bottom: dotted thin var(--border-color);
 
     padding: 4px 10px;
+    overflow: auto;     /* clearfix */
 }
 
 img.thumbnail {

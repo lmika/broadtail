@@ -1,0 +1,22 @@
+<div>
+    <h3>All Videos</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Source</th>
+                <th>Downloaded</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .videos}}
+            <tr>
+                <td>{{.Title}}</td>
+                <td>{{.Source}}</td>
+                <td>{{formatTime .SavedOn}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>

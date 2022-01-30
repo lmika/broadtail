@@ -44,3 +44,7 @@ func (f *FeedItemStore) ListRecent(ctx context.Context, feedID uuid.UUID) (feedI
 	}
 	return feedItems, err
 }
+
+func (f *FeedItemStore) Close() {
+	f.db.Close()
+}

@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"github.com/lmika/broadtail/services/videomanager"
 	"github.com/mergestat/timediff"
 	"github.com/robfig/cron"
 	"html/template"
@@ -29,6 +30,7 @@ import (
 type Config struct {
 	LibraryDir          string
 	JobDataFile         string
+	VideoDataFile       string
 	FeedsDataFile       string
 	FeedItemsDataFile   string
 	YTDownloadSimulator bool
@@ -44,6 +46,10 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "cannot open job store")
 	}
+	videoStore, err := stormstore.NewVideoStore(config.VideoDataFile)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cannot open video store")
+	}
 	feedsStore, err := stormstore.NewFeedStore(config.FeedsDataFile)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "cannot open feeds store")
@@ -54,7 +60,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	}
 	rssFetcher := rssfetcher.New()
 
-	var youtubedlProvider ytdownload.Provider
+	var youtubedlProvider ytdownload.DownloadProvider
 	if config.YTDownloadSimulator {
 		log.Println("Using youtuble-dl simulator")
 		youtubedlProvider = ytdlsimulator.New()
@@ -65,22 +71,28 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 		}
 	}
 
-	ytdownloadService := ytdownload.New(ytdownload.Config{LibraryDir: config.LibraryDir}, youtubedlProvider, feedsStore)
+	ytdownloadService := ytdownload.New(ytdownload.Config{LibraryDir: config.LibraryDir}, youtubedlProvider, feedsStore, videoStore)
 	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher)
 	jobsManager := jobsmanager.New(dispatcher, jobStore)
+	videoManager := videomanager.New(config.LibraryDir, videoStore)
 	go jobsManager.Start()
 
 	// Schedule updates every 15 minutes
 	c := cron.New()
-	if err := c.AddFunc("@every 30m", func() {
-		feedsManager.UpdateAllFeeds(context.Background())
+	if err := c.AddFunc("@every 15m", func() {
+		log.Println("Updating all feeds")
+		if err := feedsManager.UpdateAllFeeds(context.Background()); err != nil {
+			log.Printf("error updating all feeds: %v", err)
+		}
 	}); err != nil {
 		return nil, nil, errors.Wrap(err, "invalid feed update schedule")
 	}
+	c.Start()
 
 	indexHandlers := &indexHandlers{jobsManager: jobsManager}
 	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService, jobsManager: jobsManager}
-	detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService}
+	detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService, videoManager: videoManager}
+	videoHandler := &videoHandlers{videoManager: videoManager}
 	jobsHandlers := &jobsHandlers{jobsManager: jobsManager}
 	feedsHandlers := &feedsHandler{feedsManager: feedsManager}
 
@@ -90,6 +102,8 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 
 	r.Handle("/quicklook", detailsHandler.QuickLook()).Methods("GET")
 	r.Handle("/details/video/{video_id}", detailsHandler.VideoDetails()).Methods("GET")
+
+	r.Handle("/videos", videoHandler.List()).Methods("GET")
 
 	r.Handle("/jobs", jobsHandlers.List()).Methods("GET")
 	r.Handle("/jobs/done", jobsHandlers.ClearDone()).Methods("DELETE")
@@ -128,6 +142,8 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 
 	closeFn = func() {
 		jobStore.Close()
+		videoStore.Close()
+		feedItemStore.Close()
 		feedsStore.Close()
 	}
 
