@@ -2,3 +2,4 @@
 #
 
 systemctl enable broadtail
+systemctl start broadtail
