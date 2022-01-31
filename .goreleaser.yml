@@ -19,12 +19,16 @@ nfpms:
     formats:
       - deb
       - rpm
+    bindir: /usr/local/bin
     empty_folders:
       - /var/lib/broadtail/
     contents:
       - src: package/broadtail.service
         dst: /etc/systemd/system/broadtail.service
         type: config
+    scripts:
+      postinstall: package/postinstall.sh
+      preremove: package/preremove.sh
 release:
   ids:
     - package_nfpms
