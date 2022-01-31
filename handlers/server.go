@@ -9,6 +9,7 @@ import (
 	"github.com/lmika/broadtail/middleware/jobdispatcher"
 	"github.com/lmika/broadtail/middleware/render"
 	"github.com/lmika/broadtail/middleware/rssfetcher"
+	"github.com/lmika/broadtail/middleware/sessions"
 	"github.com/lmika/broadtail/middleware/ujs"
 	"github.com/lmika/broadtail/providers/jobs"
 	"github.com/lmika/broadtail/providers/stormstore"
@@ -63,6 +64,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService, jobsManager: jobsManager}
 	jobsHandlers := &jobsHandlers{jobsManager: jobsManager}
 	feedsHandlers := &feedsHandler{feedsManager: feedsManager}
+	configHandlers := &configHandler{}
 
 	r := mux.NewRouter()
 	r.Handle("/", indexHandlers.Index()).Methods("GET")
@@ -74,12 +76,15 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	r.Handle("/jobs/{job_id}", jobsHandlers.Show()).Methods("GET")
 	r.Handle("/jobs/{job_id}", jobsHandlers.Delete()).Methods("DELETE")
 
+	r.Handle("/config", configHandlers.Show()).Methods("GET")
+
 	feedsHandlers.Routes(r)
 
 	r.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.FS(config.AssetFS))))
 
 	handler = ujs.MethodRewriteHandler(r)
 	handler = jobdispatcher.New(dispatcher).Use(handler)
+	handler = sessions.Use(handler)
 	handler = render.New(config.TemplateFS).Use(handler)
 
 	closeFn = func() {

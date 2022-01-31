@@ -1,0 +1,20 @@
+<div>
+    <h3>Config</h3>
+
+    <form method="post" action="/feeds/{{.feed.ID}}">
+        <div class="fields">
+            <div class="field">
+                <div class="field-name"><label>Media Directory</label></div>
+                <div class="field-value"><input name="mediaDir" value="{{.config.MediaDir}}" class="large-text-field"></div>
+            </div>
+            <div class="field">
+                <div class="field-name"><label>youtube-dl Command</label></div>
+                <div class="field-value"><input name="youTubeDLCommmand" value="{{.config.YouTubeDLCommmand}}" class="large-text-field"></div>
+            </div>
+            <div class="field">
+                <div class="field-name"></div>
+                <div class="field-value"><input type="submit" value="Save"></div>
+            </div>            
+        </div>
+    </form>
+</div>
