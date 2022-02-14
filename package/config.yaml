@@ -1,0 +1,17 @@
+# The address the HTTP server will listen on.  Leave blank for all addresses.
+bind_addr:
+
+# The port the HTTP server will listen on.
+port: 3690
+
+# The location of data files.
+data_dir: /var/lib/broadtail
+
+# The location of the library, which will be where downloaded videos will be stored.
+# When using this with Plex, this should be a directory or a sub-directory of a configured
+# Plex library.
+library_dir: /tmp 
+
+# The owner to which these videos will be saved as.  Leave blank to use the owner that the
+# server is running as.
+library_owner:

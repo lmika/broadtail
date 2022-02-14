@@ -22,10 +22,14 @@ nfpms:
     bindir: /usr/local/bin
     empty_folders:
       - /var/lib/broadtail/
+      - /usr/local/etc/broadtail
     contents:
       - src: package/broadtail.service
         dst: /etc/systemd/system/broadtail.service
         type: config
+      - src: package/config.yaml
+        dst: /usr/local/etc/broadtail/config.yaml
+        type: "config|noreplace"
     scripts:
       postinstall: package/postinstall.sh
       preremove: package/preremove.sh
