@@ -10,7 +10,8 @@ import (
 )
 
 type Config struct {
-	LibraryDir string
+	LibraryDir   string
+	LibraryOwner string
 }
 
 type Service struct {
@@ -52,6 +53,7 @@ func (s *Service) NewYoutubeDownloadTask(ctx context.Context, youtubeId string, 
 		Feed:             sourceFeed,
 		YoutubeId:        youtubeId,
 		TargetDir:        targetDir,
+		TargetOwner:      s.config.LibraryOwner,
 		VideoStore:       s.videoStore,
 	}
 	task.Init()

@@ -3,10 +3,13 @@ package ytdownload
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"os"
+	"os/user"
+	"strconv"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/providers/jobs"
@@ -14,8 +17,10 @@ import (
 )
 
 type YoutubeDownloadTask struct {
-	YoutubeId        string
-	TargetDir        string
+	YoutubeId   string
+	TargetDir   string
+	TargetOwner string
+
 	DownloadProvider DownloadProvider
 	VideoStore       VideoStore
 	Feed             *models.Feed
@@ -56,6 +61,11 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 		if err := os.MkdirAll(y.TargetDir, 0755); err != nil {
 			return errors.Wrapf(err, "cannot create target directory: %v", y.TargetDir)
 		}
+
+		// FIXME: this needs to be recursive up to the library dir
+		if err := y.changeToTargetOwner(y.TargetDir); err != nil {
+			runContext.PostUpdate(jobs.Update{Status: "warn: " + err.Error()})
+		}
 	}
 
 	// Download the video
@@ -73,6 +83,11 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 	stat, err := os.Stat(outputFilename)
 	if err != nil {
 		return errors.Wrap(err, "cannot stat saved file")
+	}
+
+	// If setting the owner
+	if err := y.changeToTargetOwner(outputFilename); err != nil {
+		runContext.PostUpdate(jobs.Update{Status: "warn: " + err.Error()})
 	}
 
 	// Save the downloaded file details
@@ -116,6 +131,29 @@ func (y *YoutubeDownloadTask) VideoExtID() string {
 
 func (y *YoutubeDownloadTask) VideoTitle() string {
 	return y.youtubeTitle
+}
+
+func (y *YoutubeDownloadTask) changeToTargetOwner(filename string) error {
+	if y.TargetOwner == "" {
+		return nil
+	}
+
+	targetUser, err := user.Lookup(y.TargetOwner)
+	if err != nil {
+		return errors.Wrapf(err, "unable to find target owner: %v", y.TargetOwner)
+	}
+
+	uid, err := strconv.Atoi(targetUser.Uid)
+	if err != nil {
+		return errors.Wrapf(err, "target uid not an int: %v", targetUser.Uid)
+	}
+
+	gid, err := strconv.Atoi(targetUser.Gid)
+	if err != nil {
+		return errors.Wrapf(err, "target primary gid not an int: %v", targetUser.Gid)
+	}
+
+	return errors.Wrapf(os.Chown(filename, uid, gid), "unable to chown file '%v' to user '%v'", filename, y.TargetOwner)
 }
 
 func summariseTitle(t string, maxLen int) string {
