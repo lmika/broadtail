@@ -24,10 +24,10 @@ func (YoutubeDLSimulator) GetVideoMetadata(ctx context.Context, youtubeId string
 	}, nil
 }
 
-func (YoutubeDLSimulator) DownloadVideo(ctx context.Context, options models.DownloadOptions, logline func(line string)) error {
+func (YoutubeDLSimulator) DownloadVideo(ctx context.Context, options models.DownloadOptions, logline func(line string)) (string, error) {
 	for i := 1; i <= 100; i++ {
 		logline(fmt.Sprintf("[download] %d.0%% of 269.30MiB at 45.79KiB/s ETA 00:00", i))
 		time.Sleep(1 * time.Second)
 	}
-	return nil
+	return "", nil
 }

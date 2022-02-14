@@ -14,21 +14,30 @@ import (
 type Config struct {
 	templateFS fs.FS
 
-	cacheMutex *sync.RWMutex
+	cacheMutex  *sync.RWMutex
 	templateSet *template.Template
+	funcMaps    template.FuncMap
 }
 
-func New(tmplFS fs.FS) *Config{
+func New(tmplFS fs.FS, opts ...ConfigOption) *Config {
 	cfg := &Config{
 		templateFS: tmplFS,
 
-		cacheMutex: new(sync.RWMutex),
+		cacheMutex:  new(sync.RWMutex),
 		templateSet: template.New("/"),
+	}
+
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	if cfg.funcMaps != nil {
+		cfg.templateSet = cfg.templateSet.Funcs(cfg.funcMaps)
 	}
 
 	_ = fs.WalkDir(tmplFS, ".", func(path string, d fs.DirEntry, err error) error {
 		if !strings.HasSuffix(path, ".html") {
-			return  nil
+			return nil
 		}
 
 		tmpl, err := cfg.parseTemplate(path)
@@ -72,7 +81,12 @@ func (tc *Config) parseTemplate(name string) (*template.Template, error) {
 		return nil, err
 	}
 
-	tmpl, err := template.New(name).Parse(string(tmplBytes))
+	tmpl := template.New(name)
+	if tc.funcMaps != nil {
+		tmpl = tmpl.Funcs(tc.funcMaps)
+	}
+
+	tmpl, err = tmpl.Parse(string(tmplBytes))
 	if err != nil {
 		return nil, err
 	}

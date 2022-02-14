@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/xml"
 	"github.com/go-resty/resty/v2"
+	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/models/ytrss"
 	"github.com/pkg/errors"
 )
@@ -16,13 +17,23 @@ func New() *Provider {
 	return &Provider{client: resty.New()}
 }
 
-func (p *Provider) GetForChannelID(ctx context.Context, channelID string) ([]ytrss.Entry, error) {
+func (p *Provider) GetForFeed(ctx context.Context, feed models.Feed) ([]ytrss.Entry, error) {
+	switch feed.Type {
+	case models.FeedTypeYoutubeChannel:
+		return p.getForChannelID(ctx, feed.ExtID)
+	case models.FeedTypeYoutubePlaylist:
+		return p.getForPlaylistID(ctx, feed.ExtID)
+	}
+	return nil, errors.Errorf("unrecognised feed type: %v", feed.Type)
+}
+
+func (p *Provider) getForChannelID(ctx context.Context, channelID string) ([]ytrss.Entry, error) {
 	return p.getFeed(p.client.R().
 		SetQueryParam("channel_id", channelID).
 		Get("https://www.youtube.com/feeds/videos.xml"))
 }
 
-func (p *Provider) GetForPlaylistID(ctx context.Context, playlistID string) ([]ytrss.Entry, error) {
+func (p *Provider) getForPlaylistID(ctx context.Context, playlistID string) ([]ytrss.Entry, error) {
 	return p.getFeed(p.client.R().
 		SetQueryParam("playlist_id", playlistID).
 		Get("https://www.youtube.com/feeds/videos.xml"))

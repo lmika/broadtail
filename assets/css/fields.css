@@ -1,6 +1,19 @@
 div.fields {
     border-top: dotted thin var(--border-color);
     border-bottom: dotted thin var(--border-color);
+
+    padding: 4px 10px;
+    overflow: auto;     /* clearfix */
+}
+
+img.thumbnail {
+    float: right;
+    width: 270px;
+    height: auto;
+}
+
+div.fields + div.fields {
+    border-top: none;
 }
 
 div.field {
@@ -24,6 +37,6 @@ div.field-value {
     margin: 4px;
 }
 
-div.field-value.pre-wrap {
+div.pre-wrap {
     white-space: pre-wrap;
 }

@@ -14,7 +14,11 @@ type FeedStore interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
+type FeedItemStore interface {
+	ListRecent(ctx context.Context, feedID uuid.UUID) ([]models.FeedItem, error)
+	PutIfAbsent(ctx context.Context, item *models.FeedItem) error
+}
+
 type RSSFetcher interface {
-	GetForChannelID(ctx context.Context, channelID string) ([]ytrss.Entry, error)
-	GetForPlaylistID(ctx context.Context, playlistID string) ([]ytrss.Entry, error)
+	GetForFeed(ctx context.Context, feed models.Feed) ([]ytrss.Entry, error)
 }
