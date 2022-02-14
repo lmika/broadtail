@@ -6,19 +6,25 @@ import (
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/models/ytrss"
 	"github.com/pkg/errors"
-	"sort"
+	"log"
+	"sync"
 	"time"
 )
 
 type FeedsManager struct {
-	store FeedStore
-	feedProvider RSSFetcher
+	store         FeedStore
+	feedItemStore FeedItemStore
+	rssFeedSource RSSFetcher
+
+	feedUpdateMutex *sync.Mutex
 }
 
-func New(store FeedStore, feedProvider RSSFetcher) *FeedsManager {
+func New(store FeedStore, feedProvider FeedItemStore, rssFeedSource RSSFetcher) *FeedsManager {
 	return &FeedsManager{
-		store: store,
-		feedProvider: feedProvider,
+		store:           store,
+		feedItemStore:   feedProvider,
+		rssFeedSource:   rssFeedSource,
+		feedUpdateMutex: new(sync.Mutex),
 	}
 }
 
@@ -42,27 +48,64 @@ func (fm *FeedsManager) Delete(ctx context.Context, id uuid.UUID) error {
 	return fm.store.Delete(ctx, id)
 }
 
-func (fm *FeedsManager) RecentFeedItems(ctx context.Context, id uuid.UUID) (entries []ytrss.Entry, err error) {
-	feed, err := fm.store.Get(ctx, id)
+func (fm *FeedsManager) UpdateFeed(ctx context.Context, id uuid.UUID) error {
+	feed, err := fm.Get(ctx, id)
 	if err != nil {
-		return nil, err
+		return errors.Wrapf(err, "cannot get feed")
 	}
 
-	switch feed.Type {
-	case models.FeedTypeYoutubeChannel:
-		entries, err = fm.feedProvider.GetForChannelID(ctx, feed.ExtID)
-	case models.FeedTypeYoutubePlaylist:
-		entries, err = fm.feedProvider.GetForPlaylistID(ctx, feed.ExtID)
-	default:
-		return nil, errors.Errorf("unrecognised feed type: %v", feed.Type)
-	}
+	return fm.updateFeedItems(ctx, feed)
+}
+
+func (fm *FeedsManager) UpdateAllFeeds(ctx context.Context) error {
+	allFeeds, err := fm.store.List(ctx)
 	if err != nil {
-		return nil, err
+		return errors.Wrap(err, "cannot get all feeds")
 	}
 
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].Published.After(entries[j].Published)
-	})
+	for _, feed := range allFeeds {
+		if err := fm.updateFeedItems(ctx, feed); err != nil {
+			log.Printf("unable to update feed: %v", err)
+		}
+	}
 
-	return entries, nil
+	return nil
+}
+
+func (fm *FeedsManager) updateFeedItems(ctx context.Context, feed models.Feed) error {
+	fm.feedUpdateMutex.Lock()
+	defer fm.feedUpdateMutex.Unlock()
+
+	rssItems, err := fm.rssFeedSource.GetForFeed(ctx, feed)
+	if err != nil {
+		return errors.Wrapf(err, "cannot get feed items from source")
+	}
+
+	for _, item := range rssItems {
+		feedItem := fm.sourceEntryToFeedItem(&feed, item)
+		if err := fm.feedItemStore.PutIfAbsent(ctx, &feedItem); err != nil {
+			log.Printf("warn: cannot save item %v: %v", feedItem.VideoID, err)
+		}
+	}
+
+	feed.LastUpdatedAt = time.Now()
+	if err := fm.store.Save(ctx, &feed); err != nil {
+		return errors.Wrap(err, "cannot update feed")
+	}
+
+	return nil
+}
+
+func (fm *FeedsManager) sourceEntryToFeedItem(feed *models.Feed, entry ytrss.Entry) models.FeedItem {
+	return models.FeedItem{
+		FeedID:    feed.ID,
+		EntryID:   entry.VideoID,
+		Title:     entry.Title,
+		Link:      entry.Link,
+		Published: entry.Published,
+	}
+}
+
+func (fm *FeedsManager) RecentFeedItems(ctx context.Context, id uuid.UUID) (entries []models.FeedItem, err error) {
+	return fm.feedItemStore.ListRecent(ctx, id)
 }

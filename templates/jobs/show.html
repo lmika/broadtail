@@ -14,9 +14,9 @@
             <div class="field">
                 <div class="field-name">Video</div>
                 {{if .job.VideoTitle}}
-                    <div class="field-value"><a href="/video/details?youtube_id={{.job.VideoExtID}}">{{.job.VideoTitle}}</a></div>
+                    <div class="field-value"><a href="/details/video/{{.job.VideoExtID}}">{{.job.VideoTitle}}</a></div>
                 {{else}}
-                    <div class="field-value"><a href="/video/details?youtube_id={{.job.VideoExtID}}">Title Unknown ({{.job.VideoExtID}})</a></div>
+                    <div class="field-value"><a href="/details/video/{{.job.VideoExtID}}">Title Unknown ({{.job.VideoExtID}})</a></div>
                 {{end}}
             </div>
         {{end}}

@@ -45,7 +45,9 @@ func main() {
 	handler, closeFn, err := handlers.Server(handlers.Config{
 		LibraryDir:          *flagLibraryDir,
 		JobDataFile:         filepath.Join(*flagDataDir, "jobs.db"),
+		VideoDataFile:       filepath.Join(*flagDataDir, "videos.db"),
 		FeedsDataFile:       filepath.Join(*flagDataDir, "feeds.db"),
+		FeedItemsDataFile:   filepath.Join(*flagDataDir, "feeditem.db"),
 		YTDownloadSimulator: *flagYTDLSimulator,
 		TemplateFS:          templateFS,
 		AssetFS:             assetsFS,

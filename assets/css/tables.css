@@ -33,6 +33,11 @@ table td.empty-table {
     padding: 4px var(--main-horizontal-padding);
 }
 
+table th.datetime,
+table td.datetime {
+    width: 200px;
+}
+
 
 /* rel-links */
 

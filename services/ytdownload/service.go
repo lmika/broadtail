@@ -14,16 +14,18 @@ type Config struct {
 }
 
 type Service struct {
-	config    Config
-	provider  Provider
-	feedStore FeedStore
+	config     Config
+	provider   DownloadProvider
+	feedStore  FeedStore
+	videoStore VideoStore
 }
 
-func New(config Config, provider Provider, feedStore FeedStore) *Service {
+func New(config Config, provider DownloadProvider, feedStore FeedStore, videoStore VideoStore) *Service {
 	return &Service{
-		config:    config,
-		provider:  provider,
-		feedStore: feedStore,
+		config:     config,
+		provider:   provider,
+		feedStore:  feedStore,
+		videoStore: videoStore,
 	}
 }
 
@@ -33,19 +35,24 @@ func (s *Service) GetVideoMetadata(ctx context.Context, youtubeId string) (*mode
 
 func (s *Service) NewYoutubeDownloadTask(ctx context.Context, youtubeId string, feedIDConfig uuid.UUID) (jobs.Task, error) {
 	targetDir := s.config.LibraryDir
+
+	var sourceFeed *models.Feed
 	if feedIDConfig != uuid.Nil {
 		feed, err := s.feedStore.Get(ctx, feedIDConfig)
 		if err != nil {
 			return nil, err
 		}
 
+		sourceFeed = &feed
 		targetDir = filepath.Join(s.config.LibraryDir, feed.TargetDir)
 	}
 
 	task := &YoutubeDownloadTask{
-		Provider:  s.provider,
-		YoutubeId: youtubeId,
-		TargetDir: targetDir,
+		DownloadProvider: s.provider,
+		Feed:             sourceFeed,
+		YoutubeId:        youtubeId,
+		TargetDir:        targetDir,
+		VideoStore:       s.videoStore,
 	}
 	task.Init()
 	return task, nil

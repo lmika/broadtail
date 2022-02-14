@@ -48,7 +48,7 @@ func (h *feedsHandler) Create() http.Handler {
 			return err
 		}
 
-		http.Redirect(w, r, "/feeds/" + feed.ID.String(), http.StatusSeeOther)
+		http.Redirect(w, r, "/feeds/"+feed.ID.String(), http.StatusSeeOther)
 		return nil
 	})
 }
@@ -73,6 +73,22 @@ func (h *feedsHandler) Show() http.Handler {
 		render.Set(r, "feed", feed)
 		render.Set(r, "recentItems", recentItems)
 		render.HTML(r, w, http.StatusOK, "feeds/show.html")
+		return nil
+	})
+}
+
+func (h *feedsHandler) Refresh() http.Handler {
+	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+		feedId, err := uuid.Parse(mux.Vars(r)["feed_id"])
+		if err != nil {
+			return errhandler.Errorf(http.StatusBadRequest, "invalid feed ID: %v", err.Error())
+		}
+
+		if err := h.feedsManager.UpdateFeed(ctx, feedId); err != nil {
+			return err
+		}
+
+		http.Redirect(w, r, "/feeds/"+feedId.String(), http.StatusSeeOther)
 		return nil
 	})
 }
@@ -115,7 +131,7 @@ func (h *feedsHandler) Update() http.Handler {
 			return err
 		}
 
-		http.Redirect(w, r, "/feeds/" + feed.ID.String(), http.StatusSeeOther)
+		http.Redirect(w, r, "/feeds/"+feed.ID.String(), http.StatusSeeOther)
 		return nil
 	})
 }
@@ -141,6 +157,7 @@ func (h *feedsHandler) Routes(r *mux.Router) {
 	r.Handle("/feeds/new", h.New()).Methods("GET")
 	r.Handle("/feeds", h.Create()).Methods("POST")
 	r.Handle("/feeds/{feed_id}", h.Show()).Methods("GET")
+	r.Handle("/feeds/{feed_id}/refresh", h.Refresh()).Methods("POST")
 	r.Handle("/feeds/{feed_id}/edit", h.Edit()).Methods("GET")
 	r.Handle("/feeds/{feed_id}", h.Update()).Methods("PUT", "POST")
 	r.Handle("/feeds/{feed_id}", h.Delete()).Methods("DELETE")
