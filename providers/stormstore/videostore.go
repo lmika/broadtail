@@ -11,7 +11,13 @@ type VideoStore struct {
 }
 
 func (vs *VideoStore) DeleteWithExtID(extId string) error {
-	return vs.db.Select(q.Eq("ExtID", extId)).Delete(&models.SavedVideo{})
+	if err := vs.db.Select(q.Eq("ExtID", extId)).Delete(&models.SavedVideo{}); err != nil {
+		if err == storm.ErrNotFound {
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 func (vs *VideoStore) FindWithExtID(extId string) (*models.SavedVideo, error) {
