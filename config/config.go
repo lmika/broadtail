@@ -1,6 +1,8 @@
 package config
 
 import (
+	"strings"
+
 	"github.com/kkyr/fig"
 	"github.com/pkg/errors"
 )
@@ -8,6 +10,8 @@ import (
 type Config struct {
 	BindAddr string `fig:"bind_addr" default:""`
 	Port     int    `fig:"port" default:"3690"`
+
+	YoutubeDLCommand string `fig:"youtubedl_command" default:"python3 /usr/local/bin/youtube-dl"`
 
 	DataDir string `fig:"data_dir" validate:"required"`
 
@@ -25,4 +29,8 @@ func Read(cfgFile string) (cfg Config, err error) {
 		return defaultConfig, err
 	}
 	return cfg, nil
+}
+
+func (cfg Config) YoutubeDLCommandAsSlice() []string {
+	return strings.Split(cfg.YoutubeDLCommand, " ")
 }

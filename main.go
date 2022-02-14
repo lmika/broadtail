@@ -47,10 +47,12 @@ func main() {
 
 	handler, closeFn, err := handlers.Server(handlers.Config{
 		LibraryDir:          cfg.LibraryDir,
+		LibraryOwner:        cfg.LibraryOwner,
 		JobDataFile:         filepath.Join(cfg.DataDir, "jobs.db"),
 		VideoDataFile:       filepath.Join(cfg.DataDir, "videos.db"),
 		FeedsDataFile:       filepath.Join(cfg.DataDir, "feeds.db"),
 		FeedItemsDataFile:   filepath.Join(cfg.DataDir, "feeditem.db"),
+		YTDownloadCommand:   cfg.YoutubeDLCommandAsSlice(),
 		YTDownloadSimulator: *flagYTDLSimulator,
 		TemplateFS:          templateFS,
 		AssetFS:             assetsFS,

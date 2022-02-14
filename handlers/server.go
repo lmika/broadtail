@@ -3,14 +3,15 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"github.com/lmika/broadtail/services/videomanager"
-	"github.com/mergestat/timediff"
-	"github.com/robfig/cron"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/lmika/broadtail/services/videomanager"
+	"github.com/mergestat/timediff"
+	"github.com/robfig/cron"
 
 	"github.com/gorilla/mux"
 	"github.com/lmika/broadtail/middleware/jobdispatcher"
@@ -28,11 +29,15 @@ import (
 )
 
 type Config struct {
-	LibraryDir          string
-	JobDataFile         string
-	VideoDataFile       string
-	FeedsDataFile       string
-	FeedItemsDataFile   string
+	LibraryDir   string
+	LibraryOwner string
+
+	JobDataFile       string
+	VideoDataFile     string
+	FeedsDataFile     string
+	FeedItemsDataFile string
+
+	YTDownloadCommand   []string
 	YTDownloadSimulator bool
 
 	TemplateFS fs.FS
@@ -65,13 +70,16 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 		log.Println("Using youtuble-dl simulator")
 		youtubedlProvider = ytdlsimulator.New()
 	} else {
-		youtubedlProvider, err = youtubedl.New()
+		youtubedlProvider, err = youtubedl.New(config.YTDownloadCommand)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "cannot instantiate youtube-dl provider")
 		}
 	}
 
-	ytdownloadService := ytdownload.New(ytdownload.Config{LibraryDir: config.LibraryDir}, youtubedlProvider, feedsStore, videoStore)
+	ytdownloadService := ytdownload.New(ytdownload.Config{
+		LibraryDir:   config.LibraryDir,
+		LibraryOwner: config.LibraryOwner,
+	}, youtubedlProvider, feedsStore, videoStore)
 	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher)
 	jobsManager := jobsmanager.New(dispatcher, jobStore)
 	videoManager := videomanager.New(config.LibraryDir, videoStore)

@@ -16,10 +16,13 @@ import (
 )
 
 type Provider struct {
+	youtubeDLCommand []string
 }
 
-func New() (*Provider, error) {
-	provider := &Provider{}
+func New(youtubeDLCommand []string) (*Provider, error) {
+	provider := &Provider{
+		youtubeDLCommand: youtubeDLCommand,
+	}
 	if err := provider.checkAvailable(); err != nil {
 		return nil, err
 	}
@@ -28,7 +31,7 @@ func New() (*Provider, error) {
 }
 
 func (p *Provider) checkAvailable() error {
-	cmd := exec.Command("python3", "/usr/local/bin/youtube-dl", "--version")
+	cmd := p.buildYoutubeDLCommand(context.Background(), "--version")
 	return errors.Wrap(cmd.Run(), "youtube-dl is not available")
 }
 
@@ -56,12 +59,14 @@ func (p *Provider) GetVideoMetadata(ctx context.Context, youtubeId string) (*mod
 	}, nil
 }
 
+// "python3", "/usr/local/bin/youtube-dl"
+
 func (p *Provider) DownloadVideo(ctx context.Context, options models.DownloadOptions, logline func(line string)) (string, error) {
 	const filenameFormat = "%(title)s.%(id)s.%(ext)s"
 
 	// Get the expected filename
 	downloadUrl := fmt.Sprintf("https://www.youtube.com/watch?v=%v", options.YoutubeID)
-	filenameCmd := exec.CommandContext(ctx, "python3", "/usr/local/bin/youtube-dl",
+	filenameCmd := p.buildYoutubeDLCommand(ctx, "-f", "mp4[height<=720]",
 		"--get-filename", "-o", filenameFormat, "--restrict-filenames", downloadUrl)
 	out, err := filenameCmd.Output()
 	if err != nil {
@@ -69,8 +74,7 @@ func (p *Provider) DownloadVideo(ctx context.Context, options models.DownloadOpt
 	}
 	outFilename := strings.TrimSpace(string(out))
 
-	cmd := exec.CommandContext(ctx, "python3", "/usr/local/bin/youtube-dl",
-		"-o", filenameFormat, "--restrict-filenames",
+	cmd := p.buildYoutubeDLCommand(ctx, "-o", filenameFormat, "--restrict-filenames",
 		"--newline", "-f", "mp4[height<=720]", downloadUrl)
 	cmd.Dir = options.TargetDir
 
@@ -98,7 +102,7 @@ func (p *Provider) DownloadVideo(ctx context.Context, options models.DownloadOpt
 }
 
 func (yd *Provider) videoMetadata(ctx context.Context, youtubeVideoID string) (metadataJson, error) {
-	cmd := exec.CommandContext(ctx, "python3", "/usr/local/bin/youtube-dl", "--dump-json", "--", youtubeVideoID)
+	cmd := yd.buildYoutubeDLCommand(ctx, "--dump-json", "--", youtubeVideoID)
 	output, err := cmd.Output()
 
 	if err != nil {
@@ -112,4 +116,10 @@ func (yd *Provider) videoMetadata(ctx context.Context, youtubeVideoID string) (m
 	}
 
 	return jsonData, nil
+}
+
+func (yt *Provider) buildYoutubeDLCommand(ctx context.Context, args ...string) *exec.Cmd {
+	fullCmd := append(append([]string{}, yt.youtubeDLCommand...), args...)
+
+	return exec.CommandContext(ctx, fullCmd[0], fullCmd[1:]...)
 }
