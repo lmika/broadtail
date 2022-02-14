@@ -1,4 +1,8 @@
-.Phony: clean build run
+.Phony: init clean build run
+
+init:
+	go get
+	npm install
 
 clean:
 	-go clean
@@ -11,6 +15,11 @@ build-linux: build-js
 	GOOS=linux go build
 
 run: prep
+	(sleep 99999 | npm run watch-js &)
+	(sleep 99999 | npm run watch-css &)
+	go run . -dev -config ./build/config.yaml
+
+run-sim: prep
 	(sleep 99999 | npm run watch-js &)
 	(sleep 99999 | npm run watch-css &)
 	go run . -dev -config ./build/config.yaml -ytdl-simulator
