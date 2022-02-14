@@ -13,7 +13,7 @@ build-linux: build-js
 run: prep
 	(sleep 99999 | npm run watch-js &)
 	(sleep 99999 | npm run watch-css &)
-	go run . -dev -data ./build/testdata -ytdl-simulator
+	go run . -dev -config ./build/config.yaml -ytdl-simulator
 
 build-js: prep
 	npm run build-js
@@ -23,3 +23,4 @@ prep:
 	mkdir -p build/assets/js
 	mkdir -p build/assets/css
 	mkdir -p build/testdata
+	echo "data_dir: `pwd`/build/testdata" > build/config.yaml

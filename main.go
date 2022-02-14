@@ -12,17 +12,20 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/lmika/broadtail/config"
 	"github.com/lmika/broadtail/handlers"
 )
 
 func main() {
-	flagBindAddr := flag.String("bind", "", "bind address")
 	flagDevMode := flag.Bool("dev", false, "dev mode")
-	flagPort := flag.Int("p", 3690, "port")
-	flagDataDir := flag.String("data", ".", "data dir")
-	flagLibraryDir := flag.String("library", "", "library dir")
 	flagYTDLSimulator := flag.Bool("ytdl-simulator", false, "use youtube-dl simulator (for dev)")
+	flagConfigFile := flag.String("config", "", "config file")
 	flag.Parse()
+
+	cfg, err := config.Read(*flagConfigFile)
+	if err != nil {
+		log.Printf("warn: cannot read config file: %v", *flagConfigFile)
+	}
 
 	var templateFS, assetsFS fs.FS
 	if *flagDevMode {
@@ -43,9 +46,9 @@ func main() {
 	}
 
 	handler, closeFn, err := handlers.Server(handlers.Config{
-		LibraryDir:          *flagLibraryDir,
-		JobDataFile:         filepath.Join(*flagDataDir, "jobs.db"),
-		FeedsDataFile:       filepath.Join(*flagDataDir, "feeds.db"),
+		LibraryDir:          cfg.LibraryDir,
+		JobDataFile:         filepath.Join(cfg.DataDir, "jobs.db"),
+		FeedsDataFile:       filepath.Join(cfg.DataDir, "feeds.db"),
 		YTDownloadSimulator: *flagYTDLSimulator,
 		TemplateFS:          templateFS,
 		AssetFS:             assetsFS,
@@ -55,7 +58,7 @@ func main() {
 	}
 
 	server := &http.Server{
-		Addr:    fmt.Sprintf("%v:%v", *flagBindAddr, *flagPort),
+		Addr:    fmt.Sprintf("%v:%v", cfg.BindAddr, cfg.Port),
 		Handler: handler,
 	}
 
@@ -70,7 +73,7 @@ func main() {
 		server.Shutdown(ctx)
 	}()
 
-	log.Printf("Listening on %v:%v", *flagBindAddr, *flagPort)
+	log.Printf("Listening on %v:%v", cfg.BindAddr, cfg.Port)
 	server.ListenAndServe()
 
 	log.Printf("Shutting down")
