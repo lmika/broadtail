@@ -18,6 +18,8 @@ func (YoutubeDLSimulator) GetVideoMetadata(ctx context.Context, youtubeId string
 	return &models.Video{
 		ExtID:        youtubeId,
 		Title:        "Simulated video",
+		ChannelID:    "chan123",
+		ChannelName:  "Simulated channel",
 		Description:  "A simulated video with the external ID = " + youtubeId,
 		ThumbnailURL: "https://www.example.com/",
 		UploadedOn:   time.Date(2020, time.January, 1, 12, 0, 0, 0, time.UTC),

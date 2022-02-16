@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/lmika/broadtail/middleware/errhandler"
@@ -9,7 +11,6 @@ import (
 	"github.com/lmika/broadtail/middleware/reqbind"
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/services/feedsmanager"
-	"net/http"
 )
 
 type feedsHandler struct {
@@ -31,7 +32,13 @@ func (h *feedsHandler) List() http.Handler {
 
 func (h *feedsHandler) New() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		render.Set(r, "feed", models.Feed{})
+		var feed models.Feed
+
+		if err := reqbind.Bind(&feed, r); err != nil {
+			feed = models.Feed{}
+		}
+
+		render.Set(r, "feed", feed)
 		render.HTML(r, w, http.StatusOK, "feeds/new.html")
 	})
 }

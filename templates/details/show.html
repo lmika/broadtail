@@ -8,12 +8,17 @@
     <div class="fields">
         <div class="field">
             <div class="field-name">Video ID</div>
-            <div class="field-value"><a href="https://www.youtube.com/watch?v={{.video.ExtID}}">{{.video.ExtID}}</a></div>
+            <div class="field-value">
+                <a href="https://www.youtube.com/watch?v={{.video.ExtID}}">{{.video.ExtID}}</a>
+            </div>
         </div>
         {{if .video.ChannelID}}
             <div class="field">
                 <div class="field-name">Channel</div>
-                <div class="field-value"><a href="https://www.youtube.com/channel/{{.video.ChannelID}}">{{.video.ChannelName}}</a></div>
+                <div class="field-value">
+                    <a href="https://www.youtube.com/channel/{{.video.ChannelID}}">{{.video.ChannelName}}</a>
+                    <a href="/feeds/new?name={{.video.ChannelName}}&type=youtube-channel&ext_id={{.video.ChannelID}}" title="Subscribe"><i class="fa fa-rss"></i></a>
+                </div>
             </div>
         {{end}}
         <div class="field">
