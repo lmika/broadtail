@@ -22,4 +22,5 @@ jobs:
         run: |
           set -xue
           npm install
+          go install -x github.com/lmika/rwt@410887d
           make build
