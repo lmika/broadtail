@@ -27,7 +27,9 @@
     </table>
 
     <div class="rel-links">
-        <a href="/">Refresh</a> | <a href="/jobs">History</a>
+        <a href="/">Refresh</a>
+        <span class="divider"></span>
+        <a href="/jobs">History</a>
     </div>
 
     <h3>Recent Videos</h3>
@@ -51,7 +53,6 @@
                 {{else}}
                     <td>(unknown)</td>
                 {{end}}
-                <td>{{.LastMessage}}</td>
                 <td class="datetime">{{formatTime .FeedItem.Published}}</td>
             </tr>
             {{else}}
