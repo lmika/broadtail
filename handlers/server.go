@@ -96,7 +96,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	}
 	c.Start()
 
-	indexHandlers := &indexHandlers{jobsManager: jobsManager}
+	indexHandlers := &indexHandlers{jobsManager: jobsManager, feedsManager: feedsManager}
 	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService, jobsManager: jobsManager}
 	detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService, videoManager: videoManager}
 	videoHandler := &videoHandlers{videoManager: videoManager}

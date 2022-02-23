@@ -1,9 +1,10 @@
 package models
 
 import (
+	"time"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/google/uuid"
-	"time"
 )
 
 const (
@@ -37,4 +38,9 @@ type FeedItem struct {
 	Title     string
 	Link      string
 	Published time.Time
+}
+
+type RecentFeedItem struct {
+	FeedItem *FeedItem
+	Feed     *Feed
 }

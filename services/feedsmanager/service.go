@@ -2,13 +2,14 @@ package feedsmanager
 
 import (
 	"context"
+	"log"
+	"sync"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/models/ytrss"
 	"github.com/pkg/errors"
-	"log"
-	"sync"
-	"time"
 )
 
 type FeedsManager struct {
@@ -108,4 +109,26 @@ func (fm *FeedsManager) sourceEntryToFeedItem(feed *models.Feed, entry ytrss.Ent
 
 func (fm *FeedsManager) RecentFeedItems(ctx context.Context, id uuid.UUID) (entries []models.FeedItem, err error) {
 	return fm.feedItemStore.ListRecent(ctx, id)
+}
+
+func (fm *FeedsManager) RecentFeedItemsFromAllFeeds(ctx context.Context) ([]models.RecentFeedItem, error) {
+	feedItems, err := fm.feedItemStore.ListRecentsFromAllFeeds(ctx, 10)
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot list recent feed items")
+	}
+
+	recentFeedItems := make([]models.RecentFeedItem, 0, len(feedItems))
+	for _, fi := range feedItems {
+		feed, err := fm.store.Get(ctx, fi.FeedID)
+		if err != nil {
+			log.Printf("warn: cannot get feed with id: %v", err)
+		}
+
+		recentFeedItems = append(recentFeedItems, models.RecentFeedItem{
+			Feed:     &feed,
+			FeedItem: &fi,
+		})
+	}
+
+	return recentFeedItems, nil
 }

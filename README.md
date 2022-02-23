@@ -27,6 +27,7 @@ If you're insterested in doing work on Broadtail, or just testing it out before 
 can check it out and run it locally using the following procedure:
 
 1. Install [Go](https://go.dev) and Node/NPM
+2. Install [RWT](https://github.com/lmika/rwt): `go install -x github.com/lmika/rwt`
 2. Check-out the latest version of `main`
 3. Run `make init`
 4. Run `make run`

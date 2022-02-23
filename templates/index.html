@@ -29,4 +29,36 @@
     <div class="rel-links">
         <a href="/">Refresh</a> | <a href="/jobs">History</a>
     </div>
+
+    <h3>Recent Videos</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Feed</th>
+                <th>Published</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .recentFeedItems}}
+            <tr>
+                <td>
+                    <td><a href="/details/video/{{.FeedItem.EntryID}}?from_feed_id={{.FeedItem.FeedID}}">{{.FeedItem.Title}}</a></td>
+                </td>
+                {{if .Feed}}
+                    <td><a href="/feeds/{{.Feed.ID}}">{{.Feed.Name}}</a></td>
+                {{else}}
+                    <td>(unknown)</td>
+                {{end}}
+                <td>{{.LastMessage}}</td>
+                <td class="datetime">{{formatTime .FeedItem.Published}}</td>
+            </tr>
+            {{else}}
+            <tr>
+                <td class="empty-table" colspan="4">Nothing new</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
 </div>

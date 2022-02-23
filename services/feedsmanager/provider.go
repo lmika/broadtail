@@ -2,6 +2,7 @@ package feedsmanager
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/models/ytrss"
@@ -15,6 +16,7 @@ type FeedStore interface {
 }
 
 type FeedItemStore interface {
+	ListRecentsFromAllFeeds(ctx context.Context, count int) ([]models.FeedItem, error)
 	ListRecent(ctx context.Context, feedID uuid.UUID) ([]models.FeedItem, error)
 	PutIfAbsent(ctx context.Context, item *models.FeedItem) error
 }

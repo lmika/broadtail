@@ -2,6 +2,7 @@ package stormstore
 
 import (
 	"context"
+
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
 	"github.com/google/uuid"
@@ -35,6 +36,14 @@ func NewFeedItemStore(filename string) (*FeedItemStore, error) {
 	}
 
 	return &FeedItemStore{db: db}, nil
+}
+
+func (f *FeedItemStore) ListRecentsFromAllFeeds(ctx context.Context, limit int) (feedItems []models.FeedItem, err error) {
+	err = f.db.Select().OrderBy("Published").Reverse().Limit(limit).Find(&feedItems)
+	if err == storm.ErrNotFound {
+		return []models.FeedItem{}, nil
+	}
+	return feedItems, err
 }
 
 func (f *FeedItemStore) ListRecent(ctx context.Context, feedID uuid.UUID) (feedItems []models.FeedItem, err error) {
