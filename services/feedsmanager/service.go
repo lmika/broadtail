@@ -117,7 +117,7 @@ func (fm *FeedsManager) RecentFeedItemsFromAllFeeds(ctx context.Context) ([]mode
 		return nil, errors.Wrap(err, "cannot list recent feed items")
 	}
 
-	recentFeedItems := make([]models.RecentFeedItem, 0, len(feedItems))
+	recentFeedItems := make([]models.RecentFeedItem, 0)
 	for _, fi := range feedItems {
 		feed, err := fm.store.Get(ctx, fi.FeedID)
 		if err != nil {
@@ -125,8 +125,8 @@ func (fm *FeedsManager) RecentFeedItemsFromAllFeeds(ctx context.Context) ([]mode
 		}
 
 		recentFeedItems = append(recentFeedItems, models.RecentFeedItem{
-			Feed:     &feed,
-			FeedItem: &fi,
+			Feed:     feed,
+			FeedItem: fi,
 		})
 	}
 

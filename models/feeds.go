@@ -41,6 +41,6 @@ type FeedItem struct {
 }
 
 type RecentFeedItem struct {
-	FeedItem *FeedItem
-	Feed     *Feed
+	FeedItem FeedItem
+	Feed     Feed
 }
