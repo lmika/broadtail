@@ -12,7 +12,7 @@
         <tbody>
             {{range .videos}}
             <tr>
-                <td>{{.Title}}</td>
+                <td><a href="/videos/{{.ID}}">{{.Title}}</a></td>
                 <td>{{.Source}}</td>
                 <td>{{formatTime .SavedOn}}</td>
             </tr>

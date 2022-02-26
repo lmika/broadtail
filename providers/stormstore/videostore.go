@@ -3,6 +3,7 @@ package stormstore
 import (
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
+	"github.com/google/uuid"
 	"github.com/lmika/broadtail/models"
 )
 
@@ -18,6 +19,18 @@ func (vs *VideoStore) DeleteWithExtID(extId string) error {
 		return err
 	}
 	return nil
+}
+
+func (vs *VideoStore) FindWithID(id uuid.UUID) (*models.SavedVideo, error) {
+	var savedVideo models.SavedVideo
+	if err := vs.db.One("ID", id, &savedVideo); err != nil {
+		//if err == storm.ErrNotFound {
+		//	return nil, nil
+		//}
+		return nil, err
+	}
+
+	return &savedVideo, nil
 }
 
 func (vs *VideoStore) FindWithExtID(extId string) (*models.SavedVideo, error) {

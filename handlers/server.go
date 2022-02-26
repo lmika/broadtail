@@ -111,6 +111,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	r.Handle("/details/video/{video_id}", detailsHandler.VideoDetails()).Methods("GET")
 
 	r.Handle("/videos", videoHandler.List()).Methods("GET")
+	r.Handle("/videos/{video_id}", videoHandler.Show()).Methods("GET")
 
 	r.Handle("/jobs", jobsHandlers.List()).Methods("GET")
 	r.Handle("/jobs/done", jobsHandlers.ClearDone()).Methods("DELETE")

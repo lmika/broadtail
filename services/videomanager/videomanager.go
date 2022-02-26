@@ -1,6 +1,7 @@
 package videomanager
 
 import (
+	"github.com/google/uuid"
 	"github.com/lmika/broadtail/models"
 	"github.com/pkg/errors"
 	"os"
@@ -21,6 +22,10 @@ func New(dataDir string, videoStore VideoStore) *VideoManager {
 
 func (vm *VideoManager) List() ([]models.SavedVideo, error) {
 	return vm.videoStore.ListRecent()
+}
+
+func (vm *VideoManager) Get(id uuid.UUID) (*models.SavedVideo, error) {
+	return vm.videoStore.FindWithID(id)
 }
 
 func (vm *VideoManager) DownloadStatus(extId string) (models.DownloadStatus, error) {
