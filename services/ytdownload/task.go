@@ -69,14 +69,33 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 	}
 
 	// Download the video
-	outputFilename, err := y.DownloadProvider.DownloadVideo(ctx, models.DownloadOptions{
-		YoutubeID: y.YoutubeId,
-		TargetDir: y.TargetDir,
-	}, func(line string) {
-		runContext.PostUpdate(jobs.Update{Status: line})
-	})
-	if err != nil {
-		return err
+	var outputFilename string
+	for attempt := 1; attempt <= 3; attempt++ {
+		runContext.PostUpdate(jobs.Update{Status: fmt.Sprintf("Downloading video: attempt %d of 3", attempt)})
+
+		var err error
+		outputFilename, err = y.DownloadProvider.DownloadVideo(ctx, models.DownloadOptions{
+			YoutubeID: y.YoutubeId,
+			TargetDir: y.TargetDir,
+		}, func(line string) {
+			runContext.PostUpdate(jobs.Update{Status: line})
+		})
+		if err != nil {
+			// Check that the context hasn't been cancelled
+			if errors.Is(ctx.Err(), context.Canceled) {
+				return err
+			}
+
+			runContext.PostUpdate(jobs.Update{Status: "Download error: " + err.Error()})
+			if attempt >= 3 {
+				return errors.New("too many failed attempts")
+			} else {
+				runContext.PostUpdate(jobs.Update{Status: "Will sleep for 10 seconds, then try again"})
+				time.Sleep(10 * time.Second)
+			}
+		} else {
+			break
+		}
 	}
 
 	// Check that the video is present
