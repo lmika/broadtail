@@ -9,7 +9,13 @@
         </div>
         <div class="field">
             <div class="field-name"><label>External ID</label></div>
-            <div class="field-value">{{.feed.ExtID}}</div>
+            <div class="field-value">
+                {{if .externalUrl}}
+                    <a href="{{.externalUrl}}">{{.feed.ExtID}}</a>
+                {{else}}
+                    {{.feed.ExtID}}
+                {{end}}
+            </div>
         </div>
         <div class="field">
             <div class="field-name"><label>Target Dir</label></div>
@@ -26,10 +32,18 @@
     </div>
     <div class="rel-links">
         <a href="/feeds/{{.feed.ID}}/refresh" data-method="POST">Refresh</a>
+        <span class="divider"></span>
         <a href="/feeds/{{.feed.ID}}/edit">Edit</a>
     </div>
 
     <h3>Recent Items</h3>
+
+    <div class="table-associated-form">
+        <form action="/feeds/2353fa47-3d36-491a-8ce3-f86ccf6ecc82" method="get">
+            <input class="small-text-field" name="q" value="{{.request.Query}}" placeholder="Filter recent items">
+            <input type="submit" value="Filter">
+        </form>
+    </div>
 
     <table>
         <thead>

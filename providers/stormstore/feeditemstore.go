@@ -2,6 +2,7 @@ package stormstore
 
 import (
 	"context"
+	"strings"
 
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
@@ -46,8 +47,13 @@ func (f *FeedItemStore) ListRecentsFromAllFeeds(ctx context.Context, limit int) 
 	return feedItems, err
 }
 
-func (f *FeedItemStore) ListRecent(ctx context.Context, feedID uuid.UUID) (feedItems []models.FeedItem, err error) {
-	err = f.db.Select(q.Eq("FeedID", feedID)).OrderBy("Published").Reverse().Limit(50).Find(&feedItems)
+func (f *FeedItemStore) ListRecent(ctx context.Context, feedID uuid.UUID, filterExpression models.FeedItemFilter) (feedItems []models.FeedItem, err error) {
+	query := q.Eq("FeedID", feedID)
+	if len(filterExpression.ContainKeyword) > 0 {
+		query = q.And(query, q.NewFieldMatcher("Title", fieldContainsAnyCase(filterExpression.ContainKeyword)))
+	}
+
+	err = f.db.Select(query).OrderBy("Published").Reverse().Limit(50).Find(&feedItems)
 	if err == storm.ErrNotFound {
 		return []models.FeedItem{}, nil
 	}
@@ -56,4 +62,30 @@ func (f *FeedItemStore) ListRecent(ctx context.Context, feedID uuid.UUID) (feedI
 
 func (f *FeedItemStore) Close() {
 	f.db.Close()
+}
+
+func fieldContainsAnyCase(tokens []string) q.FieldMatcher {
+	lowerCaseTokens := make([]string, len(tokens))
+	for i, t := range tokens {
+		lowerCaseTokens[i] = strings.ToLower(t)
+	}
+	return fieldContainsAnyCaseMatcher(lowerCaseTokens)
+}
+
+type fieldContainsAnyCaseMatcher []string
+
+func (f fieldContainsAnyCaseMatcher) MatchField(v interface{}) (bool, error) {
+	s, isS := v.(string)
+	if !isS {
+		return false, nil
+	}
+
+	lc := strings.ToLower(s)
+
+	for _, t := range f {
+		if !strings.Contains(lc, t) {
+			return false, nil
+		}
+	}
+	return true, nil
 }

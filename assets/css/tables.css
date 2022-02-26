@@ -38,6 +38,14 @@ table td.datetime {
     width: 200px;
 }
 
+/* associated forms */
+
+div.table-associated-form {
+    text-align: right;
+    padding-right: var(--main-horizontal-padding);
+    padding-bottom: 12px;
+}
+
 
 /* rel-links */
 

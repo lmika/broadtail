@@ -2,6 +2,7 @@ package feedsmanager
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -35,6 +36,16 @@ func (fm *FeedsManager) List(ctx context.Context) ([]models.Feed, error) {
 
 func (fm *FeedsManager) Get(ctx context.Context, id uuid.UUID) (models.Feed, error) {
 	return fm.store.Get(ctx, id)
+}
+
+func (fm *FeedsManager) FeedExternalURL(f models.Feed) (string, error) {
+	switch f.Type {
+	case models.FeedTypeYoutubeChannel:
+		return fmt.Sprintf("https://www.youtube.com/channel/%v", f.ExtID), nil
+	case models.FeedTypeYoutubePlaylist:
+		return fmt.Sprintf("https://www.youtube.com/playlist/%v", f.ExtID), nil
+	}
+	return "", errors.Errorf("external url unsupported for feed type: %v", f.Type)
 }
 
 func (fm *FeedsManager) Save(ctx context.Context, feed *models.Feed) error {
@@ -107,8 +118,8 @@ func (fm *FeedsManager) sourceEntryToFeedItem(feed *models.Feed, entry ytrss.Ent
 	}
 }
 
-func (fm *FeedsManager) RecentFeedItems(ctx context.Context, id uuid.UUID) (entries []models.FeedItem, err error) {
-	return fm.feedItemStore.ListRecent(ctx, id)
+func (fm *FeedsManager) RecentFeedItems(ctx context.Context, id uuid.UUID, filterExpression models.FeedItemFilter) (entries []models.FeedItem, err error) {
+	return fm.feedItemStore.ListRecent(ctx, id, filterExpression)
 }
 
 func (fm *FeedsManager) RecentFeedItemsFromAllFeeds(ctx context.Context) ([]models.RecentFeedItem, error) {

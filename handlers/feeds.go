@@ -62,22 +62,36 @@ func (h *feedsHandler) Create() http.Handler {
 
 func (h *feedsHandler) Show() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+		var request = struct {
+			Query string `req:"q"`
+		}{}
+
 		feedId, err := uuid.Parse(mux.Vars(r)["feed_id"])
 		if err != nil {
 			return errhandler.Errorf(http.StatusBadRequest, "invalid feed ID: %v", err.Error())
 		}
+
+		if err := reqbind.Bind(&request, r); err != nil {
+			return err
+		}
+
+		feedItemFilter := models.ParseFeedItemFilter(request.Query)
 
 		feed, err := h.feedsManager.Get(ctx, feedId)
 		if err != nil {
 			return err
 		}
 
-		recentItems, err := h.feedsManager.RecentFeedItems(ctx, feedId)
+		externalUrl, _ := h.feedsManager.FeedExternalURL(feed)
+
+		recentItems, err := h.feedsManager.RecentFeedItems(ctx, feedId, feedItemFilter)
 		if err != nil {
 			return err
 		}
 
+		render.Set(r, "request", request)
 		render.Set(r, "feed", feed)
+		render.Set(r, "externalUrl", externalUrl)
 		render.Set(r, "recentItems", recentItems)
 		render.HTML(r, w, http.StatusOK, "feeds/show.html")
 		return nil

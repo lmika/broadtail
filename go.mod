@@ -10,6 +10,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/kkyr/fig v0.3.0
+	github.com/lmika/shellwords v0.0.0-20140714114018-ce258dd729fe // indirect
 	github.com/mergestat/timediff v0.0.2
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
