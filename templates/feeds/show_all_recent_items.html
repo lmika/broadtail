@@ -1,0 +1,46 @@
+<div>
+    <h3>All Recent Items</h3>
+
+    <div data-controller="paging" data-paging-current-page-value="{{.request.Page}}">
+        <div class="table-associated-form">
+            <form action="/feeds/all/recent-items" method="get" data-paging-target="form">
+                <input type="hidden" name="page" value="0" data-paging-target="pageInput">
+                <input class="small-text-field" name="q" value="{{.request.Query}}" placeholder="Filter recent items">
+                <input type="submit" value="Filter">
+            </form>
+        </div>
+
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Feed</th>
+                <th>Published</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{range .recentFeedItems}}
+            <tr>
+                <td><a href="/details/video/{{.FeedItem.EntryID}}?from_feed_id={{.FeedItem.FeedID}}">{{.FeedItem.Title}}</a></td>
+                {{if .Feed}}
+                <td><a href="/feeds/{{.Feed.ID}}">{{.Feed.Name}}</a></td>
+                {{else}}
+                <td>(unknown)</td>
+                {{end}}
+                <td class="datetime">{{formatTime .FeedItem.Published}}</td>
+            </tr>
+            {{else}}
+            <tr>
+                <td class="empty-table" colspan="4">Nothing new</td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+
+        <div class="rel-links">
+            <a href="#" data-action="paging#previousPage">Prev</a>
+            <span class="divider"></span>
+            <a href="#" data-action="paging#nextPage">Next</a>
+        </div>
+    </div>
+</div>

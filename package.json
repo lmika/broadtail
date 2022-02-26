@@ -6,6 +6,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@hotwired/stimulus": "^3.0.1",
     "esbuild": "^0.13.8",
     "font-awesome": "^4.7.0",
     "jquery": "^3.6.0",
@@ -17,7 +18,13 @@
       "build/assets/css/main.css": "assets/css/main.css"
     },
     "loaders": {
-      "file": [".eot", ".svg", ".woff", ".woff2", ".ttf"]
+      "file": [
+        ".eot",
+        ".svg",
+        ".woff",
+        ".woff2",
+        ".ttf"
+      ]
     }
   }
 }

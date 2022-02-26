@@ -39,21 +39,26 @@ func NewFeedItemStore(filename string) (*FeedItemStore, error) {
 	return &FeedItemStore{db: db}, nil
 }
 
-func (f *FeedItemStore) ListRecentsFromAllFeeds(ctx context.Context, limit int) (feedItems []models.FeedItem, err error) {
-	err = f.db.Select().OrderBy("Published").Reverse().Limit(limit).Find(&feedItems)
+func (f *FeedItemStore) ListRecentsFromAllFeeds(ctx context.Context, filterExpression models.FeedItemFilter, page, count int) (feedItems []models.FeedItem, err error) {
+	query := q.True()
+	if len(filterExpression.ContainKeyword) > 0 {
+		query = q.And(query, q.NewFieldMatcher("Title", fieldContainsAnyCase(filterExpression.ContainKeyword)))
+	}
+
+	err = f.db.Select(query).OrderBy("Published").Reverse().Skip(page * count).Limit(count).Find(&feedItems)
 	if err == storm.ErrNotFound {
 		return []models.FeedItem{}, nil
 	}
 	return feedItems, err
 }
 
-func (f *FeedItemStore) ListRecent(ctx context.Context, feedID uuid.UUID, filterExpression models.FeedItemFilter) (feedItems []models.FeedItem, err error) {
+func (f *FeedItemStore) ListRecent(ctx context.Context, feedID uuid.UUID, filterExpression models.FeedItemFilter, page int) (feedItems []models.FeedItem, err error) {
 	query := q.Eq("FeedID", feedID)
 	if len(filterExpression.ContainKeyword) > 0 {
 		query = q.And(query, q.NewFieldMatcher("Title", fieldContainsAnyCase(filterExpression.ContainKeyword)))
 	}
 
-	err = f.db.Select(query).OrderBy("Published").Reverse().Limit(50).Find(&feedItems)
+	err = f.db.Select(query).OrderBy("Published").Reverse().Skip(page * 50).Limit(50).Find(&feedItems)
 	if err == storm.ErrNotFound {
 		return []models.FeedItem{}, nil
 	}

@@ -38,27 +38,35 @@
 
     <h3>Recent Items</h3>
 
-    <div class="table-associated-form">
-        <form action="/feeds/2353fa47-3d36-491a-8ce3-f86ccf6ecc82" method="get">
-            <input class="small-text-field" name="q" value="{{.request.Query}}" placeholder="Filter recent items">
-            <input type="submit" value="Filter">
-        </form>
-    </div>
+    <div data-controller="paging" data-paging-current-page-value="{{.request.Page}}">
+        <div class="table-associated-form">
+            <form action="/feeds/{{.feed.ID}}" method="get" data-paging-target="form">
+                <input type="hidden" name="page" value="0" data-paging-target="pageInput">
+                <input class="small-text-field" name="q" value="{{.request.Query}}" placeholder="Filter recent items">
+                <input type="submit" value="Filter">
+            </form>
+        </div>
 
-    <table>
-        <thead>
-        <tr>
-            <th>Title</th>
-            <th class="datetime">Published</th>
-        </tr>
-        </thead>
-        <tbody>
-        {{range .recentItems}}
-        <tr>
-            <td><a href="/details/video/{{.EntryID}}?from_feed_id={{$feed.ID}}">{{.Title}}</a></td>
-            <td  class="datetime">{{formatTime .Published}}</td>
-        </tr>
-        {{end}}
-        </tbody>
-    </table>
+        <table>
+            <thead>
+            <tr>
+                <th>Title</th>
+                <th class="datetime">Published</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{range .recentItems}}
+                <tr>
+                    <td><a href="/details/video/{{.EntryID}}?from_feed_id={{$feed.ID}}">{{.Title}}</a></td>
+                    <td  class="datetime">{{formatTime .Published}}</td>
+                </tr>
+            {{end}}
+            </tbody>
+        </table>
+        <div class="rel-links">
+            <a href="#" data-action="paging#previousPage">Prev</a>
+            <span class="divider"></span>
+            <a href="#" data-action="paging#nextPage">Next</a>
+        </div>
+    </div>
 </div>

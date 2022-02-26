@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/lmika/broadtail/models"
 	"log"
 	"net/http"
 
@@ -16,7 +17,7 @@ type indexHandlers struct {
 
 func (ih *indexHandlers) Index() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		recentFeedItems, err := ih.feedsManager.RecentFeedItemsFromAllFeeds(r.Context())
+		recentFeedItems, err := ih.feedsManager.RecentFeedItemsFromAllFeeds(r.Context(), models.FeedItemFilter{}, 0, 10)
 		if err != nil {
 			log.Printf("warn: cannot get list of recent feed items: %v", err)
 		}

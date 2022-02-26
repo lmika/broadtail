@@ -4,6 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"net/http"
 	"reflect"
+	"strconv"
 )
 
 func Bind(target interface{}, r *http.Request) error {
@@ -51,6 +52,9 @@ func setField(field reflect.Value, formValue string) error {
 	switch field.Type().Kind() {
 	case reflect.String:
 		field.Set(reflect.ValueOf(formValue))
+	case reflect.Int:
+		intValue, _ := strconv.Atoi(formValue)
+		field.Set(reflect.ValueOf(intValue))
 	}
 
 	return nil

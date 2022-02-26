@@ -118,12 +118,12 @@ func (fm *FeedsManager) sourceEntryToFeedItem(feed *models.Feed, entry ytrss.Ent
 	}
 }
 
-func (fm *FeedsManager) RecentFeedItems(ctx context.Context, id uuid.UUID, filterExpression models.FeedItemFilter) (entries []models.FeedItem, err error) {
-	return fm.feedItemStore.ListRecent(ctx, id, filterExpression)
+func (fm *FeedsManager) RecentFeedItems(ctx context.Context, id uuid.UUID, filterExpression models.FeedItemFilter, page int) (entries []models.FeedItem, err error) {
+	return fm.feedItemStore.ListRecent(ctx, id, filterExpression, page)
 }
 
-func (fm *FeedsManager) RecentFeedItemsFromAllFeeds(ctx context.Context) ([]models.RecentFeedItem, error) {
-	feedItems, err := fm.feedItemStore.ListRecentsFromAllFeeds(ctx, 10)
+func (fm *FeedsManager) RecentFeedItemsFromAllFeeds(ctx context.Context, filterExpression models.FeedItemFilter, page, count int) ([]models.RecentFeedItem, error) {
+	feedItems, err := fm.feedItemStore.ListRecentsFromAllFeeds(ctx, filterExpression, page, count)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot list recent feed items")
 	}
