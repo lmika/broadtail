@@ -2,14 +2,13 @@ package handlers
 
 import (
 	"context"
-	"net/http"
-
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/lmika/broadtail/middleware/errhandler"
 	"github.com/lmika/broadtail/middleware/render"
 	"github.com/lmika/broadtail/middleware/reqbind"
 	"github.com/lmika/broadtail/services/feedsmanager"
+	"net/http"
 )
 
 type feedItemsHandler struct {
@@ -19,6 +18,11 @@ type feedItemsHandler struct {
 func (h *feedItemsHandler) Update() http.Handler {
 	type feedItemPatchReq struct {
 		Favourite bool `json:"favourite"`
+	}
+
+	type feedItemPatchResp struct {
+		ID        uuid.UUID `json:"id"`
+		Favourite bool      `json:"favourite"`
 	}
 
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -46,7 +50,10 @@ func (h *feedItemsHandler) Update() http.Handler {
 			return err
 		}
 
-		render.JSON(r, w, http.StatusOK, feedItem)
+		render.JSON(r, w, http.StatusOK, feedItemPatchResp{
+			ID:        feedItem.ID,
+			Favourite: feedItem.Favourite,
+		})
 		return nil
 	})
 }

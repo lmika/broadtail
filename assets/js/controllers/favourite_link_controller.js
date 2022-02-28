@@ -8,7 +8,8 @@ export default class extends Controller {
         favourite: Boolean
     };
 
-    async toggleActive() {
+    async toggleActive(ev) {
+        ev.preventDefault();
         try {
             this.element.classList.add("loading");
 

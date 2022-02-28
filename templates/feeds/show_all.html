@@ -1,9 +1,10 @@
+{{ $pagePath := .pagePath }}
 <div>
-    <h3>All Recent Items</h3>
+    <h3>{{.pageTitle}}</h3>
 
     <div data-controller="paging" data-paging-current-page-value="{{.request.Page}}">
         <div class="table-associated-form">
-            <form action="/feeds/all/recent-items" method="get" data-paging-target="form">
+            <form action="{{$pagePath}}" method="get" data-paging-target="form">
                 <input type="hidden" name="page" value="0" data-paging-target="pageInput">
                 <input class="small-text-field" name="q" value="{{.request.Query}}" placeholder="Filter recent items">
                 <input type="submit" value="Filter">
@@ -13,6 +14,7 @@
         <table>
             <thead>
             <tr>
+                <th class="favourites"></th>
                 <th>Name</th>
                 <th>Feed</th>
                 <th>Published</th>
@@ -21,6 +23,16 @@
             <tbody>
             {{range .recentFeedItems}}
             <tr>
+                <td class="favourites">
+                    <a href="#" class="favourite" data-controller="favourite-link"
+                       data-favourite-link-feed-item-id-value="{{.FeedItem.ID}}"
+                       data-favourite-link-favourite-value="{{.FeedItem.Favourite}}"
+                       data-action="click->favourite-link#toggleActive"
+                       data-favourite-link-active-class="active" data-favourite-link-loading-class="loading">
+                        <i class="fa fa-spinner"></i>
+                        <i class="fa fa-star"></i>
+                    </a>
+                </td>
                 <td><a href="/details/video/{{.FeedItem.EntryID}}?from_feed_id={{.FeedItem.FeedID}}">{{.FeedItem.Title}}</a></td>
                 {{if .Feed}}
                 <td><a href="/feeds/{{.Feed.ID}}">{{.Feed.Name}}</a></td>
@@ -31,7 +43,7 @@
             </tr>
             {{else}}
             <tr>
-                <td class="empty-table" colspan="4">Nothing new</td>
+                <td class="empty-table" colspan="4">No items</td>
             </tr>
             {{end}}
             </tbody>
