@@ -38,6 +38,7 @@ type FeedItem struct {
 	Title     string
 	Link      string
 	Published time.Time
+	Favourite bool `storm:"index"`
 }
 
 type RecentFeedItem struct {

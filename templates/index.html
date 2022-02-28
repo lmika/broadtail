@@ -32,11 +32,12 @@
         <a href="/jobs">History</a>
     </div>
 
-    <h3>Recent Videos</h3>
+    <h3>Recent Feed Items</h3>
 
     <table>
         <thead>
             <tr>
+                <th class="favourites"></th>
                 <th>Name</th>
                 <th>Feed</th>
                 <th>Published</th>
@@ -45,6 +46,16 @@
         <tbody>
             {{range .recentFeedItems}}
             <tr>
+                <td class="favourites">
+                    <a href="#" class="favourite" data-controller="favourite-link"
+                        data-favourite-link-feed-item-id-value="{{.FeedItem.ID}}"
+                        data-favourite-link-favourite-value="{{.FeedItem.Favourite}}"
+                        data-action="click->favourite-link#toggleActive"
+                        data-favourite-link-active-class="active" data-favourite-link-loading-class="loading">
+                        <i class="fa fa-spinner"></i>
+                        <i class="fa fa-star"></i>
+                    </a>
+                </td>
                 <td><a href="/details/video/{{.FeedItem.EntryID}}?from_feed_id={{.FeedItem.FeedID}}">{{.FeedItem.Title}}</a></td>
                 {{if .Feed}}
                     <td><a href="/feeds/{{.Feed.ID}}">{{.Feed.Name}}</a></td>
@@ -62,6 +73,8 @@
     </table>
 
     <div class="rel-links">
-        <a href="/feeds/all/recent-items">See More</a>
+        <a href="/feeds/all/recent">See All</a>
+        <span class="divider"></span>
+        <a href="/feeds/all/favourites">Favourites</a>
     </div>
 </div>

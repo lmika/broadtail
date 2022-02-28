@@ -143,3 +143,11 @@ func (fm *FeedsManager) RecentFeedItemsFromAllFeeds(ctx context.Context, filterE
 
 	return recentFeedItems, nil
 }
+
+func (fm *FeedsManager) GetFeedItem(ctx context.Context, feedItemID uuid.UUID) (*models.FeedItem, error) {
+	return fm.feedItemStore.Get(ctx, feedItemID)
+}
+
+func (fm *FeedsManager) SaveFeedItem(ctx context.Context, feedItem *models.FeedItem) error {
+	return fm.feedItemStore.Save(ctx, feedItem)
+}

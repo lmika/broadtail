@@ -15,6 +15,15 @@ type FeedItemStore struct {
 	db *storm.DB
 }
 
+func NewFeedItemStore(filename string) (*FeedItemStore, error) {
+	db, err := storm.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FeedItemStore{db: db}, nil
+}
+
 func (f *FeedItemStore) PutIfAbsent(ctx context.Context, item *models.FeedItem) error {
 	if err := f.db.Select(q.Eq("EntryID", item.EntryID)).First(&models.FeedItem{}); err != nil {
 		if !errors.Is(err, storm.ErrNotFound) {
@@ -30,17 +39,11 @@ func (f *FeedItemStore) PutIfAbsent(ctx context.Context, item *models.FeedItem) 
 	return f.db.Save(item)
 }
 
-func NewFeedItemStore(filename string) (*FeedItemStore, error) {
-	db, err := storm.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	return &FeedItemStore{db: db}, nil
-}
-
 func (f *FeedItemStore) ListRecentsFromAllFeeds(ctx context.Context, filterExpression models.FeedItemFilter, page, count int) (feedItems []models.FeedItem, err error) {
 	query := q.True()
+	if filterExpression.Favourites {
+		query = q.And(query, q.Eq("Favourite", true))
+	}
 	if len(filterExpression.ContainKeyword) > 0 {
 		query = q.And(query, q.NewFieldMatcher("Title", fieldContainsAnyCase(filterExpression.ContainKeyword)))
 	}
@@ -54,6 +57,9 @@ func (f *FeedItemStore) ListRecentsFromAllFeeds(ctx context.Context, filterExpre
 
 func (f *FeedItemStore) ListRecent(ctx context.Context, feedID uuid.UUID, filterExpression models.FeedItemFilter, page int) (feedItems []models.FeedItem, err error) {
 	query := q.Eq("FeedID", feedID)
+	if filterExpression.Favourites {
+		query = q.And(query, q.Eq("Favourite", true))
+	}
 	if len(filterExpression.ContainKeyword) > 0 {
 		query = q.And(query, q.NewFieldMatcher("Title", fieldContainsAnyCase(filterExpression.ContainKeyword)))
 	}
@@ -63,6 +69,21 @@ func (f *FeedItemStore) ListRecent(ctx context.Context, feedID uuid.UUID, filter
 		return []models.FeedItem{}, nil
 	}
 	return feedItems, err
+}
+
+func (f *FeedItemStore) Save(ctx context.Context, feedItem *models.FeedItem) error {
+	return f.db.Save(feedItem)
+}
+
+func (f *FeedItemStore) Get(ctx context.Context, id uuid.UUID) (*models.FeedItem, error) {
+	var feedItem models.FeedItem
+	if err := f.db.One("ID", id, &feedItem); err != nil {
+		if err == storm.ErrNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &feedItem, nil
 }
 
 func (f *FeedItemStore) Close() {

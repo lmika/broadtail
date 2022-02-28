@@ -16,6 +16,8 @@ type FeedStore interface {
 }
 
 type FeedItemStore interface {
+	Save(ctx context.Context, feedItem *models.FeedItem) error
+	Get(ctx context.Context, id uuid.UUID) (*models.FeedItem, error)
 	ListRecentsFromAllFeeds(ctx context.Context, filterExpression models.FeedItemFilter, page, count int) ([]models.FeedItem, error)
 	ListRecent(ctx context.Context, feedID uuid.UUID, filterExpression models.FeedItemFilter, page int) ([]models.FeedItem, error)
 	PutIfAbsent(ctx context.Context, item *models.FeedItem) error

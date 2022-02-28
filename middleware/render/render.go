@@ -2,6 +2,7 @@ package render
 
 import (
 	"bytes"
+	"encoding/json"
 	"html/template"
 	"net/http"
 )
@@ -33,7 +34,7 @@ func HTML(r *http.Request, w http.ResponseWriter, status int, templateName strin
 	}
 
 	masterBw := new(bytes.Buffer)
-	if err := masterTmpl.ExecuteTemplate(masterBw, "masters/frame.html", struct{
+	if err := masterTmpl.ExecuteTemplate(masterBw, "masters/frame.html", struct {
 		Content template.HTML
 	}{
 		Content: template.HTML(bw.String()),
@@ -45,4 +46,16 @@ func HTML(r *http.Request, w http.ResponseWriter, status int, templateName strin
 	w.Header().Set("Content-type", "text/html")
 	w.WriteHeader(status)
 	masterBw.WriteTo(w)
+}
+
+func JSON(r *http.Request, w http.ResponseWriter, status int, data interface{}) {
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-type", "application/json")
+	w.WriteHeader(status)
+	w.Write(jsonBytes)
 }

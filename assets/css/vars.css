@@ -2,4 +2,7 @@
     --main-horizontal-padding: 12px;
 
     --border-color: gray;
+
+    --inactive-toggle-color: #CCC;
+    --active-color: steelblue;
 }
