@@ -61,3 +61,7 @@ div.rel-links a {
 div.rel-links a:first-child {
     margin-left: 0;
 }
+
+th.favourites {
+    width: 25px;
+}

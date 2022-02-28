@@ -37,6 +37,7 @@
     <table>
         <thead>
             <tr>
+                <th class="favourites"></th>
                 <th>Name</th>
                 <th>Feed</th>
                 <th>Published</th>
@@ -45,6 +46,13 @@
         <tbody>
             {{range .recentFeedItems}}
             <tr>
+                <td class="favourites">
+                    <a href="#" class="favourite" data-controller="favourite-link" data-action="click->favourite-link#toggleActive"
+                        data-favourite-link-active-class="active" data-favourite-link-loading-class="loading">
+                        <i class="fa fa-spinner"></i>
+                        <i class="fa fa-star"></i>
+                    </a>
+                </td>
                 <td><a href="/details/video/{{.FeedItem.EntryID}}?from_feed_id={{.FeedItem.FeedID}}">{{.FeedItem.Title}}</a></td>
                 {{if .Feed}}
                     <td><a href="/feeds/{{.Feed.ID}}">{{.Feed.Name}}</a></td>

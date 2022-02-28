@@ -62,3 +62,34 @@ span.divider::before {
     margin-bottom: -2px;
     border-right: solid thin var(--border-color);
 }
+
+a.favourite {
+    display: inline-block;
+    color: var(--inactive-toggle-color);
+}
+
+a.favourite .fa-spinner {
+    display: none;
+    animation: 1s infinite linear rotate;
+}
+
+a.favourite.active {
+    color: var(--active-color);
+}
+
+a.favourite.loading {
+    color: var(--active-color);
+}
+
+a.favourite.loading .fa-spinner {
+    display: inline-block;
+}
+
+a.favourite.loading .fa-star {
+    display: none;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
