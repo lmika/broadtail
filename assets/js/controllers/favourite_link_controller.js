@@ -4,18 +4,40 @@ export default class extends Controller {
     static classes = [ "loading", "active" ];
 
     static values = {
-        isFavourite: Boolean
+        feedItemId: String,
+        favourite: Boolean
     };
 
-    connect() {
-        
+    async toggleActive() {
+        try {
+            this.element.classList.add("loading");
+
+            await this._doToggleActive();
+        } finally {
+            this.element.classList.remove("loading");
+        }
     }
 
-    toggleActive() {
-        this.element.classList.add("loading");
-        window.setTimeout(() => {
-            this.element.classList.toggle(this.activeClass);
-            this.element.classList.remove("loading");
-        }, 1500);
+    favouriteValueChanged() {
+        if (this.favouriteValue) {
+            this.element.classList.add(this.activeClass);
+        } else {
+            this.element.classList.remove(this.activeClass);
+        }
+    }
+
+    async _doToggleActive() {
+        let requestBody = JSON.stringify({ "favourite": !this.favouriteValue });
+
+        let resp = await fetch(`/feeditems/${this.feedItemIdValue}`, {
+            method: "PATCH",
+            body: requestBody,
+            headers: {
+                "Content-type": "application/json"
+            }
+        });
+        let respJson = await resp.json();
+
+        this.favouriteValue = respJson.favourite;
     }
 }

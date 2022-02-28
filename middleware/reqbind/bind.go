@@ -1,10 +1,12 @@
 package reqbind
 
 import (
-	"github.com/pkg/errors"
+	"encoding/json"
 	"net/http"
 	"reflect"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 func Bind(target interface{}, r *http.Request) error {
@@ -19,7 +21,18 @@ func Bind(target interface{}, r *http.Request) error {
 	return nil
 }
 
-func doBind(target interface{}, r *http.Request) error {
+func doBind(target interface{}, r *http.Request) error { 
+	if r.Header.Get("Content-type") == "application/json" {
+		// JSON body
+		if err := json.NewDecoder(r.Body).Decode(target); err != nil {
+			return err
+		}
+	}
+
+	return doFormBind(target, r)
+}
+
+func doFormBind(target interface{}, r *http.Request) error {
 	v := reflect.ValueOf(target)
 	if (v.Kind() != reflect.Ptr) || (v.Elem().Kind() != reflect.Struct) {
 		return errors.New("target must be a pointer to a struct")

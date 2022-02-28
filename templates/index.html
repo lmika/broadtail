@@ -47,7 +47,10 @@
             {{range .recentFeedItems}}
             <tr>
                 <td class="favourites">
-                    <a href="#" class="favourite" data-controller="favourite-link" data-action="click->favourite-link#toggleActive"
+                    <a href="#" class="favourite" data-controller="favourite-link"
+                        data-favourite-link-feed-item-id-value="{{.FeedItem.ID}}"
+                        data-favourite-link-favourite-value="{{.FeedItem.Favourite}}"
+                        data-action="click->favourite-link#toggleActive"
                         data-favourite-link-active-class="active" data-favourite-link-loading-class="loading">
                         <i class="fa fa-spinner"></i>
                         <i class="fa fa-star"></i>

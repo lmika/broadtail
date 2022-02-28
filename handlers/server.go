@@ -102,6 +102,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	videoHandler := &videoHandlers{videoManager: videoManager}
 	jobsHandlers := &jobsHandlers{jobsManager: jobsManager}
 	feedsHandlers := &feedsHandler{feedsManager: feedsManager}
+	feedItemsHandlers := &feedItemsHandler{feedsManager: feedsManager}
 
 	r := mux.NewRouter()
 	r.Handle("/", indexHandlers.Index()).Methods("GET")
@@ -119,6 +120,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	r.Handle("/jobs/{job_id}", jobsHandlers.Delete()).Methods("DELETE")
 
 	feedsHandlers.Routes(r)
+	feedItemsHandlers.Routes(r)
 
 	r.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.FS(config.AssetFS))))
 

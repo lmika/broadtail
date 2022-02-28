@@ -31,13 +31,14 @@ func (f Feed) Validate() error {
 }
 
 type FeedItem struct {
-	ID        uuid.UUID `storm:"id"`
-	EntryID   string    `storm:"unique"`
-	FeedID    uuid.UUID `storm:"index"`
-	VideoID   string
-	Title     string
-	Link      string
-	Published time.Time
+	ID        uuid.UUID `json:"id" storm:"id"`
+	EntryID   string    `json:"entry_id" storm:"unique"`
+	FeedID    uuid.UUID `json:"feed_id" storm:"index"`
+	VideoID   string    `json:"video_id"`
+	Title     string    `json:"title"`
+	Link      string    `json:"link"`
+	Published time.Time `json:"published"`
+	Favourite bool      `json:"favourite"`
 }
 
 type RecentFeedItem struct {
