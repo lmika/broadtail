@@ -108,9 +108,7 @@ func (jm *JobsManager) toJob(job *jobs.Job, updateHistory bool) models.Job {
 			modelJob.Updates[i] = models.JobUpdate{Message: h.Status}
 		}
 	} else {
-		modelJob.Updates = []models.JobUpdate{
-			{Message: job.LastUpdate().Status},
-		}
+		modelJob.Updates = []models.JobUpdate{models.ParseJobUpdate(job.LastUpdate().Status)}
 	}
 
 	return modelJob

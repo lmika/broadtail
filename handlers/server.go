@@ -129,6 +129,9 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	handler = render.New(
 		config.TemplateFS,
 		render.WithFuncs(template.FuncMap{
+			"mup": func(x, y float64) int {
+				return int(x * y)
+			},
 			"formatTime": func(t time.Time) string {
 				if t.IsZero() {
 					return "never"

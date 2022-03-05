@@ -1,0 +1,42 @@
+th.progressbar {
+    width: 206px;
+}
+
+td.progressbar {
+    width: 206px;
+    text-align: center;
+}
+
+div.progressbar {
+    display: inline-block;
+    width: 200px;
+    position: relative;
+
+    background: var(--inactive-toggle-color);
+    text-align: center;
+
+    z-index: 1;
+}
+
+div.progressbar span.label {
+    width: 200px;
+    display: inline-block;
+
+    text-align: center;
+}
+
+div.progressbar div.complete {
+    position: absolute;
+    display: inline-block;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 10;
+    overflow: hidden;
+
+    background: var(--active-color);
+}
+
+div.progressbar div.complete span.label {
+    color: white;
+}

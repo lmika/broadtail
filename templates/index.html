@@ -5,22 +5,35 @@
         <thead>
             <tr>
                 <th>Job</th>
-                <th>State</th>
-                <th>Last Update</th>
+                <th class="progressbar">Progress</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
             {{range .jobs}}
+            <!--
             <tr>
                 <td><a href="/jobs/{{.ID}}">{{.Name}}</a></td>
                 <td>{{.State}}</td>
                 <td>{{.LastMessage}}</td>
                 <td><a href="/jobs/{{.ID}}" data-method="DELETE" data-confirm="Cancel job?">Cancel</a></td>
             </tr>
+            -->
+            <tr>
+                <td><a href="/jobs/{{.ID}}">{{.Name}}</a></td>
+                <td class="progressbar">
+                    <div class="progressbar">
+                        <div class="complete" style="width: {{mup .LastUpdate.Percent 2}}px">
+                            <span class="label">{{.LastUpdate.Percent}}%</span>
+                        </div>
+                        <span class="label">{{.LastUpdate.Percent}}%</span>
+                    </div>
+                </td>
+                <td><a href="/jobs/{{.ID}}" data-method="DELETE" data-confirm="Cancel job?">Cancel</a></td>
+            </tr>
             {{else}}
             <tr>
-                <td class="empty-table" colspan="4">No jobs</td>
+                <td class="empty-table" colspan="3">No jobs</td>
             </tr>
             {{end}}
         </tbody>
