@@ -1,9 +1,6 @@
 package models
 
 import (
-	"log"
-	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,40 +15,42 @@ type Job struct {
 	VideoExtID  string
 	VideoTitle  string
 	State       jobs.JobState
-	Updates     []JobUpdate
-	Error       string
+	//Updates     []JobUpdate
+	LastUpdate JobUpdate
+	Messages   []string
+	Error      string
 }
 
-func (j *Job) SetLastUpdate(update JobUpdate) {
-	j.Updates = []JobUpdate{update}
-}
+//func (j *Job) SetLastMessage(update string) {
+//	j.Messages = []string{update}
+//}
+
+//func (j Job) LastMessage() string {
+//}
 
 func (j Job) LastMessage() string {
-	return j.LastUpdate().Message
-}
-
-func (j Job) LastUpdate() JobUpdate {
 	if j.Error != "" {
-		return JobUpdate{Message: j.Error}
-	} else if len(j.Updates) == 0 {
-		return JobUpdate{}
+		return j.Error
+	} else if len(j.Messages) == 0 {
+		return ""
 	}
 
-	return j.Updates[len(j.Updates)-1]
+	return j.Messages[len(j.Messages)-1]
 }
 
-type progress struct {
-	Percent float64
-	Size    string
-	Rate    string
-	ETA     string
-}
+//type progress struct {
+//	Percent float64
+//	Size    string
+//	Rate    string
+//	ETA     string
+//}
 
 type JobUpdate struct {
-	Message string
+	Summary string
 	Percent float64
 }
 
+/*
 func ParseJobUpdate(message string) JobUpdate {
 	p, _ := parseProgress(message)
 	return JobUpdate{
@@ -83,3 +82,4 @@ func parseProgress(message string) (progress, bool) {
 
 // [download] 2.1% of 86.31MiB at 84.91KiB/s ETA 16:59
 var progressRegexp = regexp.MustCompile(`\[download\]\s+([0-9.]+)% of ([0-9A-Za-z.]+) at ([0-9A-Za-z.]+)/s ETA ([0-9:.]+)`)
+*/

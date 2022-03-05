@@ -24,9 +24,9 @@
                 <td class="progressbar">
                     <div class="progressbar">
                         <div class="complete" style="width: {{mup .LastUpdate.Percent 2}}px">
-                            <span class="label">{{.LastUpdate.Percent}}%</span>
+                            <span class="label">{{.LastUpdate.Summary}}</span>
                         </div>
-                        <span class="label">{{.LastUpdate.Percent}}%</span>
+                        <span class="label">{{.LastUpdate.Summary}}</span>
                     </div>
                 </td>
                 <td><a href="/jobs/{{.ID}}" data-method="DELETE" data-confirm="Cancel job?">Cancel</a></td>

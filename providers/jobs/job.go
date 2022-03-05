@@ -49,29 +49,30 @@ func (js JobState) Terminal() bool {
 
 // Job is a handle to a running job
 type Job struct {
-	id   uuid.UUID
-	task Task
+	id        uuid.UUID
+	task      Task
 	createdAt time.Time
 
 	// state variables.  These are under the control of the mutex
-	stateMutex sync.Mutex
-	state      JobState
-	err        error
-	cancelFn   func()
-	lastUpdate Update
+	stateMutex    sync.Mutex
+	state         JobState
+	err           error
+	cancelFn      func()
+	lastUpdate    Update
+	lastMessage   string
 	updateHistory *updateHistory
-	data       map[string]interface{}
+	data          map[string]interface{}
 }
 
 func newJob(task Task) *Job {
 	return &Job{
-		id:         uuid.New(),
-		task:       task,
-		createdAt: time.Now(),
-		state:      StateQueued,
-		stateMutex: sync.Mutex{},
+		id:            uuid.New(),
+		task:          task,
+		createdAt:     time.Now(),
+		state:         StateQueued,
+		stateMutex:    sync.Mutex{},
 		updateHistory: newUpdateHistory(maxUpdateHistory),
-		data:       make(map[string]interface{}),
+		data:          make(map[string]interface{}),
 	}
 }
 
@@ -85,11 +86,16 @@ func (j *Job) exec(ctx context.Context, runContext RunContext) {
 	err := j.task.Execute(execCtx, runContext)
 	select {
 	case <-execCtx.Done():
+		runContext.PostMessage(execCtx.Err().Error())
+		runContext.PostUpdate(Update{Summary: "Cancelled"})
 		j.setState(runContext, StateCancelled, execCtx.Err(), nil)
 	default:
 		if err != nil {
+			runContext.PostMessage("error: " + execCtx.Err().Error())
+			runContext.PostUpdate(Update{Summary: "Error"})
 			j.setState(runContext, StateError, err, nil)
 		} else {
+			runContext.PostUpdate(Update{Percent: 100.0, Summary: "Done"})
 			j.setState(runContext, StateCompleted, nil, nil)
 		}
 	}
@@ -167,7 +173,15 @@ func (j *Job) postUpdate(lastUpdate Update) {
 	defer j.stateMutex.Unlock()
 
 	j.lastUpdate = lastUpdate
-	j.updateHistory.push(lastUpdate)
+	//j.updateHistory.push(lastUpdate)
+}
+
+func (j *Job) postMessage(message string) {
+	j.stateMutex.Lock()
+	defer j.stateMutex.Unlock()
+
+	j.lastMessage = message
+	j.updateHistory.push(message)
 }
 
 func (j *Job) LastUpdate() Update {
@@ -177,7 +191,14 @@ func (j *Job) LastUpdate() Update {
 	return j.lastUpdate
 }
 
-func (j *Job) UpdateHistory() []Update {
+func (j *Job) LastMessage() string {
+	j.stateMutex.Lock()
+	defer j.stateMutex.Unlock()
+
+	return j.lastMessage
+}
+
+func (j *Job) MessageHistory() []string {
 	j.stateMutex.Lock()
 	defer j.stateMutex.Unlock()
 

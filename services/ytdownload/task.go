@@ -48,7 +48,9 @@ func (y *YoutubeDownloadTask) String() string {
 }
 
 func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunContext) error {
-	runContext.PostUpdate(jobs.Update{Status: "Fetching video metadata"})
+	runContext.PostUpdate(jobs.Update{Summary: "Initialising", Percent: 0.0})
+	runContext.PostMessage("Fetching video metadata")
+
 	metadata, err := y.DownloadProvider.GetVideoMetadata(ctx, y.YoutubeId)
 	if err != nil {
 		return errors.Wrap(err, "cannot get metadata")
@@ -64,21 +66,27 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 
 		// FIXME: this needs to be recursive up to the library dir
 		if err := y.changeToTargetOwner(y.TargetDir); err != nil {
-			runContext.PostUpdate(jobs.Update{Status: "warn: " + err.Error()})
+			runContext.PostMessage("warn: " + err.Error())
 		}
 	}
 
 	// Download the video
 	var outputFilename string
 	for attempt := 1; attempt <= 3; attempt++ {
-		runContext.PostUpdate(jobs.Update{Status: fmt.Sprintf("Downloading video: attempt %d of 3", attempt)})
+		runContext.PostMessage(fmt.Sprintf("Downloading video: attempt %d of 3", attempt))
 
 		var err error
 		outputFilename, err = y.DownloadProvider.DownloadVideo(ctx, models.DownloadOptions{
 			YoutubeID: y.YoutubeId,
 			TargetDir: y.TargetDir,
 		}, func(line string) {
-			runContext.PostUpdate(jobs.Update{Status: line})
+			if prog, ok := parseProgress(line); ok {
+				runContext.PostUpdate(jobs.Update{
+					Percent: prog.Percent,
+					Summary: fmt.Sprintf("%.1f%% - ETA %v", prog.Percent, prog.ETA),
+				})
+			}
+			runContext.PostMessage(line)
 		})
 		if err != nil {
 			// Check that the context hasn't been cancelled
@@ -86,17 +94,20 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 				return err
 			}
 
-			runContext.PostUpdate(jobs.Update{Status: "Download error: " + err.Error()})
+			// PARSE UPDATE
+			runContext.PostMessage("Download error: " + err.Error())
 			if attempt >= 3 {
 				return errors.New("too many failed attempts")
 			} else {
-				runContext.PostUpdate(jobs.Update{Status: "Will sleep for 10 seconds, then try again"})
+				runContext.PostMessage("Will sleep for 10 seconds, then try again")
 				time.Sleep(10 * time.Second)
 			}
 		} else {
 			break
 		}
 	}
+
+	runContext.PostUpdate(jobs.Update{Summary: "Finalising", Percent: 100.0})
 
 	// Check that the video is present
 	stat, err := os.Stat(outputFilename)
@@ -106,7 +117,7 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 
 	// If setting the owner
 	if err := y.changeToTargetOwner(outputFilename); err != nil {
-		runContext.PostUpdate(jobs.Update{Status: "warn: " + err.Error()})
+		runContext.PostMessage("warn: " + err.Error())
 	}
 
 	// Save the downloaded file details
@@ -127,13 +138,14 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 	}
 
 	if err := y.VideoStore.DeleteWithExtID(videoExtId); err != nil {
-		runContext.PostUpdate(jobs.Update{Status: "warn: cannot delete existing video details: " + err.Error()})
+		runContext.PostMessage("warn: cannot delete existing video details: " + err.Error())
 	}
 
 	if err := y.VideoStore.Save(savedVideo); err != nil {
-		runContext.PostUpdate(jobs.Update{Status: "warn: cannot save video details: " + err.Error()})
+		runContext.PostMessage("warn: cannot save video details: " + err.Error())
 	}
 
+	//runContext.PostUpdate(jobs.Update{Summary: "Done", Percent: 100.0})
 	return nil
 }
 
