@@ -27,10 +27,6 @@ type RunContext interface {
 	postStateChange(fromState, toState JobState)
 }
 
-//func PostUpdatef(runContext RunContext, msg string, args ...interface{}) {
-//	runContext.PostUpdate(Update{fmt.Sprintf(msg, args...)})
-//}
-
 type jobRunContext struct {
 	job               *Job
 	subManagementChan chan subMgmtEvent

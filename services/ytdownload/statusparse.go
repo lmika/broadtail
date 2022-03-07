@@ -13,7 +13,6 @@ type progress struct {
 }
 
 func parseProgress(message string) (progress, bool) {
-	//log.Printf("Parsing progress: '%v'", message)
 	groups := progressRegexp.FindStringSubmatch(message)
 	if len(groups) != 5 {
 		//log.Println("bad progress: ", len(groups))

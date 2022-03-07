@@ -5,8 +5,6 @@
         <thead>
             <tr>
                 <th>Job</th>
-<!--                <th>State</th>-->
-<!--                <th>Last Update</th>-->
                 <th class="progressbar">Progress</th>
                 <th></th>
             </tr>
@@ -15,8 +13,6 @@
             {{range .runningJobs}}
             <tr>
                 <td><a href="/jobs/{{.ID}}">{{.Name}}</a></td>
-<!--                <td>{{.State}}</td>-->
-<!--                <td>{{.LastMessage}}</td>-->
                 <td class="progressbar">
                     <div class="progressbar">
                         <div class="complete" style="width: {{mup .LastUpdate.Percent 2}}px">
@@ -31,8 +27,6 @@
             {{range .historicalJobs}}
             <tr>
                 <td><a href="/jobs/{{.ID}}">{{.Name}}</a></td>
-<!--                <td>{{.State}}</td>-->
-<!--                <td>{{.LastMessage}}</td>-->
                 <td class="progressbar">
                     <div class="progressbar">
                         <div class="complete" style="width: {{mup .LastUpdate.Percent 2}}px">

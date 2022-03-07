@@ -173,7 +173,6 @@ func (j *Job) postUpdate(lastUpdate Update) {
 	defer j.stateMutex.Unlock()
 
 	j.lastUpdate = lastUpdate
-	//j.updateHistory.push(lastUpdate)
 }
 
 func (j *Job) postMessage(message string) {
