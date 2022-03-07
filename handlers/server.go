@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"github.com/lmika/broadtail/providers/plexprovider"
 	"html/template"
 	"io/fs"
 	"log"
@@ -36,6 +37,9 @@ type Config struct {
 	VideoDataFile     string
 	FeedsDataFile     string
 	FeedItemsDataFile string
+
+	PlexBaseURL string
+	PlexToken   string
 
 	YTDownloadCommand   []string
 	YTDownloadSimulator bool
@@ -76,10 +80,12 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 		}
 	}
 
+	plexProvider := plexprovider.New(config.PlexBaseURL, config.PlexToken)
+
 	ytdownloadService := ytdownload.New(ytdownload.Config{
 		LibraryDir:   config.LibraryDir,
 		LibraryOwner: config.LibraryOwner,
-	}, youtubedlProvider, feedsStore, videoStore)
+	}, youtubedlProvider, feedsStore, videoStore, plexProvider)
 	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher)
 	jobsManager := jobsmanager.New(dispatcher, jobStore)
 	videoManager := videomanager.New(config.LibraryDir, videoStore)

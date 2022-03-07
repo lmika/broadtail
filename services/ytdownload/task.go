@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -21,9 +22,10 @@ type YoutubeDownloadTask struct {
 	TargetDir   string
 	TargetOwner string
 
-	DownloadProvider DownloadProvider
-	VideoStore       VideoStore
-	Feed             *models.Feed
+	DownloadProvider  DownloadProvider
+	VideoStore        VideoStore
+	VideoDownloadHook VideoDownloadHooks
+	Feed              *models.Feed
 
 	// The following fields are protected by the mutex
 	detailsMutex *sync.Mutex
@@ -108,6 +110,7 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 	}
 
 	runContext.PostUpdate(jobs.Update{Summary: "Finalising", Percent: 100.0})
+	runContext.PostMessage("Organising downloaded file")
 
 	// Check that the video is present
 	stat, err := os.Stat(outputFilename)
@@ -120,6 +123,13 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 		runContext.PostMessage("warn: " + err.Error())
 	}
 
+	var relativeFilename = outputFilename
+	if r, err := filepath.Rel(y.TargetDir, outputFilename); err == nil {
+		relativeFilename = r
+	} else {
+		runContext.PostMessage("warn: cannot get relative filename: " + err.Error())
+	}
+
 	// Save the downloaded file details
 	videoExtId := models.ExtIDPrefixYoutube + y.YoutubeId
 	savedVideo := models.SavedVideo{
@@ -127,7 +137,7 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 		ExtID:    videoExtId,
 		Title:    metadata.Title,
 		SavedOn:  time.Now(),
-		Location: outputFilename,
+		Location: relativeFilename,
 		FileSize: stat.Size(),
 	}
 	if y.Feed != nil {
@@ -145,7 +155,12 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 		runContext.PostMessage("warn: cannot save video details: " + err.Error())
 	}
 
-	//runContext.PostUpdate(jobs.Update{Summary: "Done", Percent: 100.0})
+	runContext.PostMessage("Calling hooks")
+	if err := y.VideoDownloadHook.NewVideoDownloaded(ctx, outputFilename); err != nil {
+		runContext.PostMessage("warn: hook returns error: " + err.Error())
+	}
+
+	runContext.PostMessage("Download complete")
 	return nil
 }
 

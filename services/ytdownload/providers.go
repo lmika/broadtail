@@ -19,3 +19,7 @@ type VideoStore interface {
 	Save(video models.SavedVideo) error
 	DeleteWithExtID(extId string) error
 }
+
+type VideoDownloadHooks interface {
+	NewVideoDownloaded(ctx context.Context, outVideoFile string) error
+}
