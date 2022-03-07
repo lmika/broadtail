@@ -1,7 +1,7 @@
 <div>
     <h3>Jobs</h3>
 
-    <table>
+    <table data-controller="job-status">
         <thead>
             <tr>
                 <th>Job</th>
@@ -11,22 +11,16 @@
         </thead>
         <tbody>
             {{range .jobs}}
-            <!--
-            <tr>
-                <td><a href="/jobs/{{.ID}}">{{.Name}}</a></td>
-                <td>{{.State}}</td>
-                <td>{{.LastMessage}}</td>
-                <td><a href="/jobs/{{.ID}}" data-method="DELETE" data-confirm="Cancel job?">Cancel</a></td>
-            </tr>
-            -->
             <tr>
                 <td><a href="/jobs/{{.ID}}">{{.Name}}</a></td>
                 <td class="progressbar">
-                    <div class="progressbar">
-                        <div class="complete" style="width: {{mup .LastUpdate.Percent 2}}px">
-                            <span class="label">{{.LastUpdate.Summary}}</span>
+                    <div class="progressbar" data-controller="job-status-progressbar"
+                         data-job-status-progressbar-job-id-value="{{.ID}}"
+                         data-action="jobUpdateMessage@window->job-status-progressbar#handleNewMessage">
+                        <div class="complete" style="width: {{mup .LastUpdate.Percent 2}}px" data-job-status-progressbar-target="percentage">
+                            <span class="label" data-job-status-progressbar-target="summary">{{.LastUpdate.Summary}}</span>
                         </div>
-                        <span class="label">{{.LastUpdate.Summary}}</span>
+                        <span class="label" data-job-status-progressbar-target="summary">{{.LastUpdate.Summary}}</span>
                     </div>
                 </td>
                 <td><a href="/jobs/{{.ID}}" data-method="DELETE" data-confirm="Cancel job?">Cancel</a></td>

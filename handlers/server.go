@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"github.com/lmika/broadtail/providers/plexprovider"
 	"html/template"
 	"io/fs"
@@ -102,7 +103,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	}
 	c.Start()
 
-	indexHandlers := &indexHandlers{jobsManager: jobsManager, feedsManager: feedsManager}
+	indexHandlers := &indexHandlers{jobsManager: jobsManager, feedsManager: feedsManager, upgrader: websocket.Upgrader{}}
 	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService, jobsManager: jobsManager}
 	detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService, videoManager: videoManager}
 	videoHandler := &videoHandlers{videoManager: videoManager}
@@ -112,6 +113,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 
 	r := mux.NewRouter()
 	r.Handle("/", indexHandlers.Index()).Methods("GET")
+	r.Handle("/ws/status", indexHandlers.StatusUpdateWebsocket()).Methods("GET")
 	r.Handle("/job/download/youtube", ytdownloadHandlers.CreateDownloadJob()).Methods("POST")
 
 	r.Handle("/quicklook", detailsHandler.QuickLook()).Methods("GET")
