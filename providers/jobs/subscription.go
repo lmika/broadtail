@@ -20,7 +20,8 @@ func (s *Subscription) Close() {
 }
 
 type Update struct {
-	Status string
+	Summary string
+	Percent float64
 }
 
 type SubscriptionEvent interface{}

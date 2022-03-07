@@ -3,6 +3,8 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"github.com/gorilla/websocket"
+	"github.com/lmika/broadtail/providers/plexprovider"
 	"html/template"
 	"io/fs"
 	"log"
@@ -36,6 +38,9 @@ type Config struct {
 	VideoDataFile     string
 	FeedsDataFile     string
 	FeedItemsDataFile string
+
+	PlexBaseURL string
+	PlexToken   string
 
 	YTDownloadCommand   []string
 	YTDownloadSimulator bool
@@ -76,10 +81,12 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 		}
 	}
 
+	plexProvider := plexprovider.New(config.PlexBaseURL, config.PlexToken)
+
 	ytdownloadService := ytdownload.New(ytdownload.Config{
 		LibraryDir:   config.LibraryDir,
 		LibraryOwner: config.LibraryOwner,
-	}, youtubedlProvider, feedsStore, videoStore)
+	}, youtubedlProvider, feedsStore, videoStore, plexProvider)
 	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher)
 	jobsManager := jobsmanager.New(dispatcher, jobStore)
 	videoManager := videomanager.New(config.LibraryDir, videoStore)
@@ -96,7 +103,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	}
 	c.Start()
 
-	indexHandlers := &indexHandlers{jobsManager: jobsManager, feedsManager: feedsManager}
+	indexHandlers := &indexHandlers{jobsManager: jobsManager, feedsManager: feedsManager, upgrader: websocket.Upgrader{}}
 	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService, jobsManager: jobsManager}
 	detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService, videoManager: videoManager}
 	videoHandler := &videoHandlers{videoManager: videoManager}
@@ -106,6 +113,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 
 	r := mux.NewRouter()
 	r.Handle("/", indexHandlers.Index()).Methods("GET")
+	r.Handle("/ws/status", indexHandlers.StatusUpdateWebsocket()).Methods("GET")
 	r.Handle("/job/download/youtube", ytdownloadHandlers.CreateDownloadJob()).Methods("POST")
 
 	r.Handle("/quicklook", detailsHandler.QuickLook()).Methods("GET")
@@ -129,6 +137,9 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	handler = render.New(
 		config.TemplateFS,
 		render.WithFuncs(template.FuncMap{
+			"mup": func(x, y float64) int {
+				return int(x * y)
+			},
 			"formatTime": func(t time.Time) string {
 				if t.IsZero() {
 					return "never"

@@ -15,6 +15,9 @@ type Config struct {
 
 	DataDir string `fig:"data_dir" validate:"required"`
 
+	PlexBaseURL string `fig:"plex_base_url"`
+	PlexToken   string `fig:"plex_token"`
+
 	LibraryDir   string `fig:"library_dir" validate:"required"`
 	LibraryOwner string `fig:"library_owner"`
 }

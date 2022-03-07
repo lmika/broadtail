@@ -102,15 +102,19 @@ func (jm *JobsManager) toJob(job *jobs.Job, updateHistory bool) models.Job {
 	}
 
 	if updateHistory {
-		history := job.UpdateHistory()
-		modelJob.Updates = make([]models.JobUpdate, len(history))
+		history := job.MessageHistory()
+		modelJob.Messages = make([]string, len(history))
 		for i, h := range history {
-			modelJob.Updates[i] = models.JobUpdate{Message: h.Status}
+			modelJob.Messages[i] = h
 		}
 	} else {
-		modelJob.Updates = []models.JobUpdate{
-			{Message: job.LastUpdate().Status},
-		}
+		modelJob.Messages = []string{job.LastMessage()}
+	}
+
+	lastUpdate := job.LastUpdate()
+	modelJob.LastUpdate = models.JobUpdate{
+		Percent: lastUpdate.Percent,
+		Summary: lastUpdate.Summary,
 	}
 
 	return modelJob

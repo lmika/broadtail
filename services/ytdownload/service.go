@@ -15,18 +15,20 @@ type Config struct {
 }
 
 type Service struct {
-	config     Config
-	provider   DownloadProvider
-	feedStore  FeedStore
-	videoStore VideoStore
+	config            Config
+	provider          DownloadProvider
+	feedStore         FeedStore
+	videoStore        VideoStore
+	videoDownloadHook VideoDownloadHooks
 }
 
-func New(config Config, provider DownloadProvider, feedStore FeedStore, videoStore VideoStore) *Service {
+func New(config Config, provider DownloadProvider, feedStore FeedStore, videoStore VideoStore, videoDownloadHook VideoDownloadHooks) *Service {
 	return &Service{
-		config:     config,
-		provider:   provider,
-		feedStore:  feedStore,
-		videoStore: videoStore,
+		config:            config,
+		provider:          provider,
+		feedStore:         feedStore,
+		videoStore:        videoStore,
+		videoDownloadHook: videoDownloadHook,
 	}
 }
 
@@ -49,12 +51,13 @@ func (s *Service) NewYoutubeDownloadTask(ctx context.Context, youtubeId string, 
 	}
 
 	task := &YoutubeDownloadTask{
-		DownloadProvider: s.provider,
-		Feed:             sourceFeed,
-		YoutubeId:        youtubeId,
-		TargetDir:        targetDir,
-		TargetOwner:      s.config.LibraryOwner,
-		VideoStore:       s.videoStore,
+		DownloadProvider:  s.provider,
+		Feed:              sourceFeed,
+		YoutubeId:         youtubeId,
+		TargetDir:         targetDir,
+		TargetOwner:       s.config.LibraryOwner,
+		VideoStore:        s.videoStore,
+		VideoDownloadHook: s.videoDownloadHook,
 	}
 	task.Init()
 	return task, nil

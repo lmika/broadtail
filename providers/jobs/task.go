@@ -2,7 +2,6 @@ package jobs
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"os"
 )
@@ -21,24 +20,25 @@ type DisplayableTask interface {
 
 type RunContext interface {
 	PostUpdate(update Update)
+	PostMessage(msg string)
 	TempFile(pattern string) (*os.File, error)
 	Set(key string, value interface{})
 
 	postStateChange(fromState, toState JobState)
 }
 
-func PostUpdatef(runContext RunContext, msg string, args ...interface{}) {
-	runContext.PostUpdate(Update{fmt.Sprintf(msg, args...)})
-}
-
 type jobRunContext struct {
-	job *Job
+	job               *Job
 	subManagementChan chan subMgmtEvent
 }
 
 func (rc *jobRunContext) PostUpdate(update Update) {
 	rc.job.postUpdate(update)
 	rc.subManagementChan <- subMgmtPublish{UpdateSubscriptionEvent{rc.job, update}}
+}
+
+func (rc *jobRunContext) PostMessage(msg string) {
+	rc.job.postMessage(msg)
 }
 
 func (rc *jobRunContext) postStateChange(fromState, toState JobState) {
