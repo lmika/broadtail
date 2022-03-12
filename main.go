@@ -54,6 +54,7 @@ func main() {
 		VideoDataFile:       filepath.Join(cfg.DataDir, "videos.db"),
 		FeedsDataFile:       filepath.Join(cfg.DataDir, "feeds.db"),
 		FeedItemsDataFile:   filepath.Join(cfg.DataDir, "feeditem.db"),
+		FavouritesDataFile:  filepath.Join(cfg.DataDir, "favourites.db"),
 		YTDownloadCommand:   cfg.YoutubeDLCommandAsSlice(),
 		YTDownloadSimulator: *flagYTDLSimulator,
 		TemplateFS:          templateFS,

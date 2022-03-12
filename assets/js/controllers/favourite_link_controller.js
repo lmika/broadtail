@@ -5,7 +5,7 @@ export default class extends Controller {
 
     static values = {
         feedItemId: String,
-        favourite: Boolean
+        favouriteId: String
     };
 
     async toggleActive(ev) {
@@ -19,8 +19,8 @@ export default class extends Controller {
         }
     }
 
-    favouriteValueChanged() {
-        if (this.favouriteValue) {
+    favouriteIdValueChanged() {
+        if (this.favouriteIdValue !== "") {
             this.element.classList.add(this.activeClass);
         } else {
             this.element.classList.remove(this.activeClass);
@@ -28,17 +28,46 @@ export default class extends Controller {
     }
 
     async _doToggleActive() {
-        let requestBody = JSON.stringify({ "favourite": !this.favouriteValue });
+        if (this.favouriteIdValue === "") {
+            try {
+                let newFavourite = await this._addFavourite();
+                this.favouriteIdValue = newFavourite.id;
+            } catch (e) {
+                console.error("cannot add new favourite", e);
+                alert("Error adding new favourite");
+            }
+        } else {
+            try {
+                await this._deleteFavourite();
+                this.favouriteIdValue = "";
+            } catch (e) {
+                console.error("cannot remove favourite", e);
+                alert("Error removing favourite");
+            }
+        }
+    }
 
-        let resp = await fetch(`/feeditems/${this.feedItemIdValue}`, {
-            method: "PATCH",
+    async _addFavourite() {
+        let requestBody = JSON.stringify({
+            "origin": {
+                "type": "feed-item",
+                "id": this.feedItemIdValue,
+            }
+        });
+
+        let resp = await fetch(`/favourites/`, {
+            method: "POST",
             body: requestBody,
             headers: {
                 "Content-type": "application/json"
             }
         });
-        let respJson = await resp.json();
+        return await resp.json();
+    }
 
-        this.favouriteValue = respJson.favourite;
+    async _deleteFavourite() {
+        let resp = await fetch(`/favourites/${this.favouriteIdValue}`, {
+            method: "DELETE",
+        });
     }
 }

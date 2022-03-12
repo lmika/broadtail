@@ -85,7 +85,7 @@ func (h *feedsHandler) Show() http.Handler {
 
 		externalUrl, _ := h.feedsManager.FeedExternalURL(feed)
 
-		recentItems, err := h.feedsManager.RecentFeedItems(ctx, feedId, feedItemFilter, request.Page)
+		recentItems, err := h.feedsManager.RecentFeedItems(ctx, &feed, feedItemFilter, request.Page)
 		if err != nil {
 			return err
 		}

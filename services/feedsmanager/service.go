@@ -3,6 +3,7 @@ package feedsmanager
 import (
 	"context"
 	"fmt"
+	"github.com/lmika/broadtail/services/favourites"
 	"log"
 	"sync"
 	"time"
@@ -14,19 +15,21 @@ import (
 )
 
 type FeedsManager struct {
-	store         FeedStore
-	feedItemStore FeedItemStore
-	rssFeedSource RSSFetcher
+	store            FeedStore
+	feedItemStore    FeedItemStore
+	rssFeedSource    RSSFetcher
+	favouriteService *favourites.Service
 
 	feedUpdateMutex *sync.Mutex
 }
 
-func New(store FeedStore, feedProvider FeedItemStore, rssFeedSource RSSFetcher) *FeedsManager {
+func New(store FeedStore, feedProvider FeedItemStore, rssFeedSource RSSFetcher, favouriteService *favourites.Service) *FeedsManager {
 	return &FeedsManager{
-		store:           store,
-		feedItemStore:   feedProvider,
-		rssFeedSource:   rssFeedSource,
-		feedUpdateMutex: new(sync.Mutex),
+		store:            store,
+		feedItemStore:    feedProvider,
+		rssFeedSource:    rssFeedSource,
+		favouriteService: favouriteService,
+		feedUpdateMutex:  new(sync.Mutex),
 	}
 }
 
@@ -96,7 +99,7 @@ func (fm *FeedsManager) updateFeedItems(ctx context.Context, feed models.Feed) e
 	for _, item := range rssItems {
 		feedItem := fm.sourceEntryToFeedItem(&feed, item)
 		if err := fm.feedItemStore.PutIfAbsent(ctx, &feedItem); err != nil {
-			log.Printf("warn: cannot save item %v: %v", feedItem.VideoID, err)
+			log.Printf("warn: cannot save item %v: %v", feedItem.EntryID, err)
 		}
 	}
 
@@ -118,8 +121,22 @@ func (fm *FeedsManager) sourceEntryToFeedItem(feed *models.Feed, entry ytrss.Ent
 	}
 }
 
-func (fm *FeedsManager) RecentFeedItems(ctx context.Context, id uuid.UUID, filterExpression models.FeedItemFilter, page int) (entries []models.FeedItem, err error) {
-	return fm.feedItemStore.ListRecent(ctx, id, filterExpression, page)
+func (fm *FeedsManager) RecentFeedItems(ctx context.Context, feed *models.Feed, filterExpression models.FeedItemFilter, page int) ([]models.RecentFeedItem, error) {
+	feedItems, err := fm.feedItemStore.ListRecent(ctx, feed.ID, filterExpression, page)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot get items from feed %v", feed.ID)
+	}
+
+	recentFeedItems := make([]models.RecentFeedItem, 0)
+	for _, fi := range feedItems {
+		recentFeedItems = append(recentFeedItems, models.RecentFeedItem{
+			Feed:        *feed,
+			FeedItem:    fi,
+			FavouriteID: fm.favouriteIdForFeedItem(ctx, fi),
+		})
+	}
+
+	return recentFeedItems, nil
 }
 
 func (fm *FeedsManager) RecentFeedItemsFromAllFeeds(ctx context.Context, filterExpression models.FeedItemFilter, page, count int) ([]models.RecentFeedItem, error) {
@@ -136,8 +153,9 @@ func (fm *FeedsManager) RecentFeedItemsFromAllFeeds(ctx context.Context, filterE
 		}
 
 		recentFeedItems = append(recentFeedItems, models.RecentFeedItem{
-			Feed:     feed,
-			FeedItem: fi,
+			Feed:        feed,
+			FeedItem:    fi,
+			FavouriteID: fm.favouriteIdForFeedItem(ctx, fi),
 		})
 	}
 
@@ -150,4 +168,16 @@ func (fm *FeedsManager) GetFeedItem(ctx context.Context, feedItemID uuid.UUID) (
 
 func (fm *FeedsManager) SaveFeedItem(ctx context.Context, feedItem *models.FeedItem) error {
 	return fm.feedItemStore.Save(ctx, feedItem)
+}
+
+func (fm *FeedsManager) favouriteIdForFeedItem(ctx context.Context, feedItem models.FeedItem) string {
+	var favouriteId = ""
+	f, err := fm.favouriteService.VideoFavourited(ctx, models.VideoRef{Source: models.YoutubeVideoRefSource, ID: feedItem.EntryID})
+	if err != nil {
+		log.Printf("warn: cannot get favourite for item with id: %v", err)
+	} else if f != nil {
+		favouriteId = f.ID.String()
+	}
+
+	return favouriteId
 }
