@@ -36,6 +36,21 @@
             <div class="field-name">Download Status</div>
             <div class="field-value">{{.downloadStatus}}</div>
         </div>
+        <div class="field">
+            <div class="field-name">Favourite</div>
+            <div class="field-value">
+                <a href="#" class="favourite" data-controller="favourite-link"
+                   data-favourite-link-favourite-id-value="{{.favouriteID}}"
+                   data-favourite-link-origin-type-value="manual"
+                   data-favourite-link-origin-id-value="youtube:{{.video.ExtID}}"
+                   data-action="click->favourite-link#toggleActive"
+                   data-favourite-link-active-class="active" data-favourite-link-loading-class="loading">
+                    <i class="fa fa-spinner"></i>
+                    <i class="fa fa-star"></i>
+                    Favourite
+                </a>
+            </div>
+        </div>
     </div>
 
 

@@ -94,7 +94,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 		LibraryOwner: config.LibraryOwner,
 	}, youtubedlProvider, feedsStore, videoStore, plexProvider)
 
-	favouriteService := favourites.NewService(favouriteStore, feedItemStore)
+	favouriteService := favourites.NewService(favouriteStore, ytdownloadService, feedsStore, feedItemStore)
 	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher, favouriteService)
 	jobsManager := jobsmanager.New(dispatcher, jobStore)
 	videoManager := videomanager.New(config.LibraryDir, videoStore)
@@ -113,11 +113,10 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 
 	indexHandlers := &indexHandlers{jobsManager: jobsManager, feedsManager: feedsManager, upgrader: websocket.Upgrader{}}
 	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService, jobsManager: jobsManager}
-	detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService, videoManager: videoManager}
+	detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService, videoManager: videoManager, favouriteService: favouriteService}
 	videoHandler := &videoHandlers{videoManager: videoManager}
 	jobsHandlers := &jobsHandlers{jobsManager: jobsManager}
 	feedsHandlers := &feedsHandler{feedsManager: feedsManager}
-	feedItemsHandlers := &feedItemsHandler{feedsManager: feedsManager}
 	favouritesHandlers := &favouritesHandler{favouriteService: favouriteService}
 
 	r := mux.NewRouter()
@@ -137,7 +136,6 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	r.Handle("/jobs/{job_id}", jobsHandlers.Delete()).Methods("DELETE")
 
 	feedsHandlers.Routes(r)
-	feedItemsHandlers.Routes(r)
 	favouritesHandlers.Routes(r)
 
 	r.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.FS(config.AssetFS))))

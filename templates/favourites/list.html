@@ -1,10 +1,9 @@
-{{ $pagePath := .pagePath }}
 <div>
     <h3>{{.pageTitle}}</h3>
 
     <div data-controller="paging" data-paging-current-page-value="{{.request.Page}}">
         <div class="table-associated-form">
-            <form action="{{$pagePath}}" method="get" data-paging-target="form">
+            <form action="/favourites" method="get" data-paging-target="form">
                 <input type="hidden" name="page" value="0" data-paging-target="pageInput">
                 <input class="small-text-field" name="q" value="{{.request.Query}}" placeholder="Filter recent items">
                 <input type="submit" value="Filter">
@@ -16,31 +15,31 @@
             <tr>
                 <th class="favourites"></th>
                 <th>Name</th>
-                <th>Feed</th>
+                <th>Origin</th>
                 <th>Published</th>
             </tr>
             </thead>
             <tbody>
-            {{range .recentFeedItems}}
+            {{range .favourites}}
             <tr>
                 <td class="favourites">
                     <a href="#" class="favourite" data-controller="favourite-link"
-                       data-favourite-link-favourite-id-value="{{.FavouriteID}}"
-                       data-favourite-link-origin-type-value="feed-item"
-                       data-favourite-link-origin-id-value="{{.FeedItem.ID}}"
+                       data-favourite-link-favourite-id-value="{{.Favourite.ID}}"
+                       data-favourite-link-origin-type-value="{{.Favourite.Origin.Type}}"
+                       data-favourite-link-origin-id-value="{{.Favourite.Origin.ID}}"
                        data-action="click->favourite-link#toggleActive"
                        data-favourite-link-active-class="active" data-favourite-link-loading-class="loading">
                         <i class="fa fa-spinner"></i>
                         <i class="fa fa-star"></i>
                     </a>
                 </td>
-                <td><a href="/details/video/{{.FeedItem.EntryID}}?from_feed_id={{.FeedItem.FeedID}}">{{.FeedItem.Title}}</a></td>
-                {{if .Feed}}
-                <td><a href="/feeds/{{.Feed.ID}}">{{.Feed.Name}}</a></td>
+                <td><a href="/details/video/{{.Favourite.VideoRef.ID}}">{{.Favourite.Title}}</a></td>
+                {{if .OriginURL}}
+                    <td><a href="{{.OriginURL}}">{{.OriginTitle}}</a></td>
                 {{else}}
-                <td>(unknown)</td>
+                    <td>{{.OriginTitle}}</td>
                 {{end}}
-                <td class="datetime">{{formatTime .FeedItem.Published}}</td>
+                <td class="datetime">{{formatTime .Favourite.Published}}</td>
             </tr>
             {{else}}
             <tr>

@@ -3,6 +3,7 @@ package stormstore
 import (
 	"context"
 	"github.com/asdine/storm/v3"
+	"github.com/asdine/storm/v3/q"
 	"github.com/google/uuid"
 	"github.com/lmika/broadtail/models"
 	"github.com/pkg/errors"
@@ -23,6 +24,19 @@ func NewFavouriteStore(filename string) (*FavouriteStore, error) {
 
 func (f *FavouriteStore) Close() {
 	f.db.Close()
+}
+
+func (f *FavouriteStore) List(ctx context.Context, filterExpr models.FeedItemFilter, page int) (favorites []models.Favourite, err error) {
+	var query = q.True()
+	if len(filterExpr.ContainKeyword) > 0 {
+		query = q.NewFieldMatcher("Title", fieldContainsAnyCase(filterExpr.ContainKeyword))
+	}
+
+	err = f.db.Select(query).OrderBy("Published").Reverse().Skip(page * 50).Limit(50).Find(&favorites)
+	if err == storm.ErrNotFound {
+		return []models.Favourite{}, nil
+	}
+	return favorites, err
 }
 
 func (fs *FavouriteStore) LookupByVideoRef(ctx context.Context, videoRef models.VideoRef) (*models.Favourite, error) {

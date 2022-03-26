@@ -201,40 +201,38 @@ func (h *feedsHandler) ShowAllRecentItems() http.Handler {
 	})
 }
 
-func (h *feedsHandler) ShowAllFavourites() http.Handler {
-	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-		var request = struct {
-			Query string `req:"q"`
-			Page  int    `req:"page"`
-		}{}
-
-		if err := reqbind.Bind(&request, r); err != nil {
-			return err
-		}
-
-		feedItemFilter := models.ParseFeedItemFilter(request.Query)
-		feedItemFilter.Favourites = true
-
-		recentItems, err := h.feedsManager.RecentFeedItemsFromAllFeeds(ctx, feedItemFilter, request.Page, 50)
-		if err != nil {
-			return err
-		}
-
-		render.Set(r, "request", request)
-		render.Set(r, "recentFeedItems", recentItems)
-		render.Set(r, "pageTitle", "Favourites")
-		render.Set(r, "pagePath", "/feeds/all/favourites")
-		render.HTML(r, w, http.StatusOK, "feeds/show_all.html")
-		return nil
-	})
-}
+//func (h *feedsHandler) ShowAllFavourites() http.Handler {
+//	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+//		var request = struct {
+//			Query string `req:"q"`
+//			Page  int    `req:"page"`
+//		}{}
+//
+//		if err := reqbind.Bind(&request, r); err != nil {
+//			return err
+//		}
+//
+//		feedItemFilter := models.ParseFeedItemFilter(request.Query)
+//
+//		recentItems, err := h.feedsManager.RecentFeedItemsFromAllFeeds(ctx, feedItemFilter, request.Page, 50)
+//		if err != nil {
+//			return err
+//		}
+//
+//		render.Set(r, "request", request)
+//		render.Set(r, "recentFeedItems", recentItems)
+//		render.Set(r, "pageTitle", "Favourites")
+//		render.Set(r, "pagePath", "/feeds/all/favourites")
+//		render.HTML(r, w, http.StatusOK, "feeds/show_all.html")
+//		return nil
+//	})
+//}
 
 func (h *feedsHandler) Routes(r *mux.Router) {
 	r.Handle("/feeds", h.List()).Methods("GET")
 	r.Handle("/feeds/new", h.New()).Methods("GET")
 	r.Handle("/feeds", h.Create()).Methods("POST")
 	r.Handle("/feeds/all/recent", h.ShowAllRecentItems()).Methods("GET")
-	r.Handle("/feeds/all/favourites", h.ShowAllFavourites()).Methods("GET")
 	r.Handle("/feeds/{feed_id}", h.Show()).Methods("GET")
 	r.Handle("/feeds/{feed_id}/refresh", h.Refresh()).Methods("POST")
 	r.Handle("/feeds/{feed_id}/edit", h.Edit()).Methods("GET")

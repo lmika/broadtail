@@ -2,6 +2,8 @@ package models
 
 import (
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
+	"strings"
 	"time"
 )
 
@@ -20,6 +22,20 @@ type VideoRef struct {
 	ID     string         `json:"id"`
 }
 
+func ParseVideoRef(str string) (VideoRef, error) {
+	refId := strings.SplitN(str, ":", 2)
+	if len(refId) != 2 {
+		return VideoRef{}, errors.Errorf("invalid manual ref: ")
+	}
+
+	// TODO:
+	if refId[0] != YoutubeVideoRefSource {
+		return VideoRef{}, errors.Errorf("unrecognised source")
+	}
+
+	return VideoRef{Source: YoutubeVideoRefSource, ID: refId[1]}, nil
+}
+
 type FavouriteOrigin struct {
 	Type OriginType `json:"type"`
 	ID   string     `json:"id"`
@@ -34,5 +50,12 @@ const (
 type OriginType string
 
 const (
+	ManualOriginType   = "manual"
 	FeedItemOriginType = "feed-item"
 )
+
+type FavouriteWithOrigin struct {
+	Favourite   Favourite
+	OriginTitle string
+	OriginURL   string
+}

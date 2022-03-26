@@ -4,7 +4,6 @@ import "github.com/lmika/shellwords"
 
 type FeedItemFilter struct {
 	ContainKeyword []string
-	Favourites     bool
 }
 
 func ParseFeedItemFilter(queryString string) FeedItemFilter {

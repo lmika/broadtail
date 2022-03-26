@@ -4,7 +4,8 @@ export default class extends Controller {
     static classes = [ "loading", "active" ];
 
     static values = {
-        feedItemId: String,
+        originType: String,
+        originId: String,
         favouriteId: String
     };
 
@@ -50,12 +51,12 @@ export default class extends Controller {
     async _addFavourite() {
         let requestBody = JSON.stringify({
             "origin": {
-                "type": "feed-item",
-                "id": this.feedItemIdValue,
+                "type": this.originTypeValue,
+                "id": this.originIdValue,
             }
         });
 
-        let resp = await fetch(`/favourites/`, {
+        let resp = await fetch(`/favourites`, {
             method: "POST",
             body: requestBody,
             headers: {

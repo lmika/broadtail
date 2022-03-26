@@ -41,9 +41,6 @@ func (f *FeedItemStore) PutIfAbsent(ctx context.Context, item *models.FeedItem) 
 
 func (f *FeedItemStore) ListRecentsFromAllFeeds(ctx context.Context, filterExpression models.FeedItemFilter, page, count int) (feedItems []models.FeedItem, err error) {
 	query := q.True()
-	if filterExpression.Favourites {
-		query = q.And(query, q.Eq("Favourite", true))
-	}
 	if len(filterExpression.ContainKeyword) > 0 {
 		query = q.And(query, q.NewFieldMatcher("Title", fieldContainsAnyCase(filterExpression.ContainKeyword)))
 	}
@@ -57,9 +54,6 @@ func (f *FeedItemStore) ListRecentsFromAllFeeds(ctx context.Context, filterExpre
 
 func (f *FeedItemStore) ListRecent(ctx context.Context, feedID uuid.UUID, filterExpression models.FeedItemFilter, page int) (feedItems []models.FeedItem, err error) {
 	query := q.Eq("FeedID", feedID)
-	if filterExpression.Favourites {
-		query = q.And(query, q.Eq("Favourite", true))
-	}
 	if len(filterExpression.ContainKeyword) > 0 {
 		query = q.And(query, q.NewFieldMatcher("Title", fieldContainsAnyCase(filterExpression.ContainKeyword)))
 	}

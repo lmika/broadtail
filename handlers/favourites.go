@@ -18,6 +18,31 @@ type favouritesHandler struct {
 	favouriteService *favourites.Service
 }
 
+func (fh *favouritesHandler) list() http.Handler {
+	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+		var request = struct {
+			Query string `req:"q"`
+			Page  int    `req:"page"`
+		}{}
+
+		if err := reqbind.Bind(&request, r); err != nil {
+			return err
+		}
+
+		feedItemFilter := models.ParseFeedItemFilter(request.Query)
+
+		favouriteItems, err := fh.favouriteService.List(ctx, feedItemFilter, request.Page)
+		if err != nil {
+			return err
+		}
+
+		render.Set(r, "request", request)
+		render.Set(r, "favourites", favouriteItems)
+		render.HTML(r, w, http.StatusOK, "favourites/list.html")
+		return nil
+	})
+}
+
 func (fh *favouritesHandler) add() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 		var req struct {
@@ -62,6 +87,7 @@ func (fh *favouritesHandler) delete() http.Handler {
 }
 
 func (fh *favouritesHandler) Routes(r *mux.Router) {
-	r.Handle("/favourites/", fh.add()).Methods("POST")
+	r.Handle("/favourites", fh.list()).Methods("GET")
+	r.Handle("/favourites", fh.add()).Methods("POST")
 	r.Handle("/favourites/{favourite_id}", fh.delete()).Methods("DELETE")
 }
