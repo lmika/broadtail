@@ -34,14 +34,13 @@ type FeedItem struct {
 	ID        uuid.UUID `storm:"id"`
 	EntryID   string    `storm:"unique"`
 	FeedID    uuid.UUID `storm:"index"`
-	VideoID   string
 	Title     string
 	Link      string
 	Published time.Time
-	Favourite bool `storm:"index"`
 }
 
 type RecentFeedItem struct {
-	FeedItem FeedItem
-	Feed     Feed
+	FeedItem    FeedItem
+	Feed        Feed
+	FavouriteID string
 }

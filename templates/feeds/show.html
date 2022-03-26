@@ -60,16 +60,17 @@
                 <tr>
                     <td class="favourites">
                         <a href="#" class="favourite" data-controller="favourite-link"
-                           data-favourite-link-feed-item-id-value="{{.ID}}"
-                           data-favourite-link-favourite-value="{{.Favourite}}"
+                           data-favourite-link-favourite-id-value="{{.FavouriteID}}"
+                           data-favourite-link-origin-type-value="feed-item"
+                           data-favourite-link-origin-id-value="{{.FeedItem.ID}}"
                            data-action="click->favourite-link#toggleActive"
                            data-favourite-link-active-class="active" data-favourite-link-loading-class="loading">
                             <i class="fa fa-spinner"></i>
                             <i class="fa fa-star"></i>
                         </a>
                     </td>
-                    <td><a href="/details/video/{{.EntryID}}?from_feed_id={{$feed.ID}}">{{.Title}}</a></td>
-                    <td  class="datetime">{{formatTime .Published}}</td>
+                    <td><a href="/details/video/{{.FeedItem.EntryID}}?from_feed_id={{$feed.ID}}">{{.FeedItem.Title}}</a></td>
+                    <td  class="datetime">{{formatTime .FeedItem.Published}}</td>
                 </tr>
             {{end}}
             </tbody>

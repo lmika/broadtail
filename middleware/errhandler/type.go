@@ -3,6 +3,7 @@ package errhandler
 import (
 	"context"
 	"github.com/pkg/errors"
+	"log"
 	"net/http"
 )
 
@@ -18,6 +19,7 @@ func HandlerFunc(errHandler ErrorHandler) http.Handler {
 				status = herr.httpStatus
 			}
 
+			log.Printf("error: %v", err)
 			http.Error(w, err.Error(), status)
 		}
 	})
@@ -36,7 +38,7 @@ func Wrap(cause error, status int) error {
 
 type handlerError struct {
 	httpStatus int
-	cause error
+	cause      error
 }
 
 func (eh handlerError) Error() string {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/lmika/broadtail/providers/plexprovider"
+	"github.com/lmika/broadtail/services/favourites"
 	"html/template"
 	"io/fs"
 	"log"
@@ -34,10 +35,11 @@ type Config struct {
 	LibraryDir   string
 	LibraryOwner string
 
-	JobDataFile       string
-	VideoDataFile     string
-	FeedsDataFile     string
-	FeedItemsDataFile string
+	JobDataFile        string
+	VideoDataFile      string
+	FeedsDataFile      string
+	FeedItemsDataFile  string
+	FavouritesDataFile string
 
 	PlexBaseURL string
 	PlexToken   string
@@ -68,6 +70,10 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "cannot open feeds store")
 	}
+	favouriteStore, err := stormstore.NewFavouriteStore(config.FavouritesDataFile)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cannot open favourites store")
+	}
 	rssFetcher := rssfetcher.New()
 
 	var youtubedlProvider ytdownload.DownloadProvider
@@ -87,7 +93,9 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 		LibraryDir:   config.LibraryDir,
 		LibraryOwner: config.LibraryOwner,
 	}, youtubedlProvider, feedsStore, videoStore, plexProvider)
-	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher)
+
+	favouriteService := favourites.NewService(favouriteStore, ytdownloadService, feedsStore, feedItemStore)
+	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher, favouriteService)
 	jobsManager := jobsmanager.New(dispatcher, jobStore)
 	videoManager := videomanager.New(config.LibraryDir, videoStore)
 	go jobsManager.Start()
@@ -105,11 +113,11 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 
 	indexHandlers := &indexHandlers{jobsManager: jobsManager, feedsManager: feedsManager, upgrader: websocket.Upgrader{}}
 	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService, jobsManager: jobsManager}
-	detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService, videoManager: videoManager}
+	detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService, videoManager: videoManager, favouriteService: favouriteService}
 	videoHandler := &videoHandlers{videoManager: videoManager}
 	jobsHandlers := &jobsHandlers{jobsManager: jobsManager}
 	feedsHandlers := &feedsHandler{feedsManager: feedsManager}
-	feedItemsHandlers := &feedItemsHandler{feedsManager: feedsManager}
+	favouritesHandlers := &favouritesHandler{favouriteService: favouriteService}
 
 	r := mux.NewRouter()
 	r.Handle("/", indexHandlers.Index()).Methods("GET")
@@ -128,7 +136,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	r.Handle("/jobs/{job_id}", jobsHandlers.Delete()).Methods("DELETE")
 
 	feedsHandlers.Routes(r)
-	feedItemsHandlers.Routes(r)
+	favouritesHandlers.Routes(r)
 
 	r.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.FS(config.AssetFS))))
 
@@ -166,6 +174,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 		videoStore.Close()
 		feedItemStore.Close()
 		feedsStore.Close()
+		favouriteStore.Close()
 	}
 
 	return handler, closeFn, nil
