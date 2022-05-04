@@ -3,14 +3,16 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/lmika/broadtail/providers/plexprovider"
-	"github.com/lmika/broadtail/services/favourites"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/lmika/broadtail/providers/plexprovider"
+	"github.com/lmika/broadtail/services/favourites"
+	"github.com/lmika/gopkgs/http/middleware/render"
 
 	"github.com/lmika/broadtail/services/videomanager"
 	"github.com/mergestat/timediff"
@@ -18,7 +20,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/lmika/broadtail/middleware/jobdispatcher"
-	"github.com/lmika/broadtail/middleware/render"
 	"github.com/lmika/broadtail/middleware/rssfetcher"
 	"github.com/lmika/broadtail/middleware/ujs"
 	"github.com/lmika/broadtail/providers/jobs"
@@ -118,6 +119,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	jobsHandlers := &jobsHandlers{jobsManager: jobsManager}
 	feedsHandlers := &feedsHandler{feedsManager: feedsManager}
 	favouritesHandlers := &favouritesHandler{favouriteService: favouriteService}
+	settingHandlers := &settingHandlers{}
 
 	r := mux.NewRouter()
 	r.Handle("/", indexHandlers.Index()).Methods("GET")
@@ -137,6 +139,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 
 	feedsHandlers.Routes(r)
 	favouritesHandlers.Routes(r)
+	settingHandlers.Routes(r)
 
 	r.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.FS(config.AssetFS))))
 
@@ -167,6 +170,8 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 				return fmt.Sprintf("%d:%02d", mins, secs)
 			},
 		}),
+		render.WithFrame("frames/main.html"),
+		render.RebuildOnChange(context.Background(), "templates"), // TEMP
 	).Use(handler)
 
 	closeFn = func() {

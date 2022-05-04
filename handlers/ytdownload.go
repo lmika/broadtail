@@ -2,17 +2,18 @@ package handlers
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/lmika/broadtail/middleware/errhandler"
-	"github.com/lmika/broadtail/middleware/render"
 	"github.com/lmika/broadtail/services/jobsmanager"
 	"github.com/lmika/broadtail/services/ytdownload"
-	"net/http"
+	"github.com/lmika/gopkgs/http/middleware/render"
 )
 
 type youTubeDownloadHandlers struct {
 	ytdownloadService *ytdownload.Service
-	jobsManager *jobsmanager.JobsManager
+	jobsManager       *jobsmanager.JobsManager
 }
 
 func (ytdl *youTubeDownloadHandlers) ShowDetails() http.Handler {

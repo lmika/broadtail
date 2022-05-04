@@ -2,16 +2,17 @@ package handlers
 
 import (
 	"context"
+	"log"
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/lmika/broadtail/middleware/errhandler"
-	"github.com/lmika/broadtail/middleware/render"
 	"github.com/lmika/broadtail/middleware/reqbind"
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/services/favourites"
+	"github.com/lmika/gopkgs/http/middleware/render"
 	"github.com/pkg/errors"
-	"log"
-	"net/http"
 )
 
 type favouritesHandler struct {

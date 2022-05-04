@@ -7,10 +7,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/lmika/broadtail/middleware/errhandler"
-	"github.com/lmika/broadtail/middleware/render"
 	"github.com/lmika/broadtail/middleware/reqbind"
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/services/feedsmanager"
+	"github.com/lmika/gopkgs/http/middleware/render"
 )
 
 type feedsHandler struct {

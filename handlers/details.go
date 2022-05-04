@@ -2,15 +2,16 @@ package handlers
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/gorilla/mux"
 	"github.com/lmika/broadtail/middleware/errhandler"
-	"github.com/lmika/broadtail/middleware/render"
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/services/favourites"
 	"github.com/lmika/broadtail/services/videomanager"
 	"github.com/lmika/broadtail/services/ytdownload"
+	"github.com/lmika/gopkgs/http/middleware/render"
 	"github.com/pkg/errors"
-	"net/http"
 )
 
 type detailsHandler struct {

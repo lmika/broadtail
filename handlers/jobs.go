@@ -2,13 +2,14 @@ package handlers
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/lmika/broadtail/middleware/errhandler"
 	"github.com/lmika/broadtail/middleware/jobdispatcher"
-	"github.com/lmika/broadtail/middleware/render"
 	"github.com/lmika/broadtail/services/jobsmanager"
-	"net/http"
+	"github.com/lmika/gopkgs/http/middleware/render"
 )
 
 type jobsHandlers struct {

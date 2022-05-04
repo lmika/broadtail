@@ -2,17 +2,18 @@ package handlers
 
 import (
 	"context"
+	"log"
+	"net/http"
+
 	"github.com/gorilla/websocket"
 	"github.com/lmika/broadtail/middleware/errhandler"
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/providers/jobs"
 	"github.com/pkg/errors"
-	"log"
-	"net/http"
 
-	"github.com/lmika/broadtail/middleware/render"
 	"github.com/lmika/broadtail/services/feedsmanager"
 	"github.com/lmika/broadtail/services/jobsmanager"
+	"github.com/lmika/gopkgs/http/middleware/render"
 )
 
 type indexHandlers struct {
