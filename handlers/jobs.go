@@ -49,6 +49,8 @@ func (ytdl *jobsHandlers) ClearDone() http.Handler {
 
 func (h *jobsHandlers) List() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+		render.UseFrame(r, "frames/history.html")
+
 		historialJobs, err := h.jobsManager.HistoricalJobs()
 		if err != nil {
 			return err

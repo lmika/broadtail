@@ -17,6 +17,8 @@ type videoHandlers struct {
 
 func (h *videoHandlers) List() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+		render.UseFrame(r, "frames/history.html")
+
 		videoList, err := h.videoManager.List()
 		if err != nil {
 			return err

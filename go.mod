@@ -10,6 +10,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/kkyr/fig v0.3.0
+	github.com/lmika/gopkgs v0.0.0-20220504060120-48c3e4f681e8
 	github.com/lmika/shellwords v0.0.0-20140714114018-ce258dd729fe
 	github.com/mergestat/timediff v0.0.2
 	github.com/pkg/errors v0.9.1
@@ -20,7 +21,6 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
-	github.com/lmika/gopkgs v0.0.0-20220504060120-48c3e4f681e8 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -30,3 +30,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
+
+replace github.com/lmika/gopkgs => ../../libs/gopkgs
