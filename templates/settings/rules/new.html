@@ -1,4 +1,4 @@
-<form method="GET" action="/settings/rules/new">
+<form method="POST" action="/settings/rules">
     <div>
         <h3>New Rule</h3>
 
@@ -26,8 +26,9 @@
                 <div class="field-value">
                     <select name="condition.feedId">
                         <option value="">(any)</option>
-                        <option value="123">GDQ</option>
-                        <option value="456">The 8 Bit guy</option>
+                        {{range .feeds}}
+                            <option value="{{.ID}}">{{.Name}}</option>
+                        {{end}}
                     </select>
                 </div>
             </div>

@@ -1,6 +1,7 @@
 package reqbind_test
 
 import (
+	"github.com/google/uuid"
 	"github.com/lmika/broadtail/middleware/reqbind"
 	"github.com/stretchr/testify/assert"
 	"net/http/httptest"
@@ -55,6 +56,17 @@ func TestBind(t *testing.T) {
 		assert.Equal(t, -456, s.Bar)
 	})
 
+	t.Run("should bind to TextUnmarshaler", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "https://www.example.com/?id=e559c6f0-ae06-4fc4-9d08-10a5994a8d11", nil)
+		s := struct {
+			ID uuid.UUID `req:"id"`
+		}{}
+
+		err := reqbind.Bind(&s, req)
+		assert.NoError(t, err, nil)
+		assert.Equal(t, uuid.MustParse("e559c6f0-ae06-4fc4-9d08-10a5994a8d11"), s.ID)
+	})
+
 	t.Run("should bind to bools", func(t *testing.T) {
 		scenarios := []struct {
 			Param    string
@@ -86,6 +98,21 @@ func TestBind(t *testing.T) {
 				assert.Equal(t, scenario.Expected, s.Active)
 			})
 		}
+	})
+
+	t.Run("should zero bool if field is not present", func(t *testing.T) {
+		formParams := make(url.Values)
+
+		req := httptest.NewRequest("POST", "https://www.example.com/", strings.NewReader(formParams.Encode()))
+		req.Header.Set("Content-type", "application/x-www-form-urlencoded")
+
+		s := struct {
+			Active bool `req:"active,zero"`
+		}{Active: true}
+
+		err := reqbind.Bind(&s, req)
+		assert.NoError(t, err, nil)
+		assert.False(t, s.Active)
 	})
 
 	t.Run("should bind to fields from of nested structures", func(t *testing.T) {

@@ -119,7 +119,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	jobsHandlers := &jobsHandlers{jobsManager: jobsManager}
 	feedsHandlers := &feedsHandler{feedsManager: feedsManager}
 	favouritesHandlers := &favouritesHandler{favouriteService: favouriteService}
-	settingHandlers := &settingHandlers{}
+	settingHandlers := &settingHandlers{feedManager: feedsManager}
 
 	r := mux.NewRouter()
 	r.Handle("/", indexHandlers.Index()).Methods("GET")

@@ -1,12 +1,17 @@
 package reqbind
 
 import (
+	"encoding"
 	"encoding/json"
+	"github.com/pkg/errors"
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
+)
 
-	"github.com/pkg/errors"
+var (
+	textUnmarshalerType = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()
 )
 
 func Bind(target interface{}, r *http.Request) error {
@@ -49,18 +54,25 @@ func bindStruct(sct reflect.Value, r *http.Request, prefix string) error {
 	sctType := sct.Type()
 	for i := 0; i < sctType.NumField(); i++ {
 		fieldName := sctType.Field(i)
+
 		urlTag, ok := fieldName.Tag.Lookup("req")
 		if !ok {
 			continue
 		}
 
 		field := sct.FieldByName(fieldName.Name)
-		value := r.FormValue(prefix + urlTag)
+
+		formName, option, hasOption := strings.Cut(urlTag, ",")
+		if hasOption && option == "zero" {
+			field.Set(reflect.Zero(field.Type()))
+		}
+
+		value := r.FormValue(prefix + formName)
 
 		var err error
 		switch field.Type().Kind() {
 		case reflect.Struct:
-			err = bindStruct(field, r, prefix+urlTag+".")
+			err = bindStruct(field, r, prefix+formName+".")
 		default:
 			err = setField(field, value)
 		}
@@ -74,6 +86,7 @@ func bindStruct(sct reflect.Value, r *http.Request, prefix string) error {
 }
 
 func setField(field reflect.Value, formValue string) error {
+	// Primitives
 	switch field.Type().Kind() {
 	case reflect.String:
 		field.Set(reflect.ValueOf(formValue))
@@ -87,6 +100,14 @@ func setField(field reflect.Value, formValue string) error {
 		case "0", "f", "F", "false", "FALSE", "False", "off", "OFF":
 			field.Set(reflect.ValueOf(false))
 		}
+	}
+
+	if field.Type().AssignableTo(textUnmarshalerType) {
+		ut := field.Interface().(encoding.TextUnmarshaler)
+		_ = ut.UnmarshalText([]byte(formValue))
+	} else if fieldPtr := field.Addr(); fieldPtr.Type().AssignableTo(textUnmarshalerType) {
+		ut := fieldPtr.Interface().(encoding.TextUnmarshaler)
+		_ = ut.UnmarshalText([]byte(formValue))
 	}
 
 	return nil
