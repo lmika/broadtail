@@ -21,7 +21,7 @@ func Bind(target interface{}, r *http.Request) error {
 	return nil
 }
 
-func doBind(target interface{}, r *http.Request) error { 
+func doBind(target interface{}, r *http.Request) error {
 	if r.Header.Get("Content-type") == "application/json" {
 		// JSON body
 		if err := json.NewDecoder(r.Body).Decode(target); err != nil {
@@ -42,7 +42,10 @@ func doFormBind(target interface{}, r *http.Request) error {
 		return err
 	}
 
-	sct := v.Elem()
+	return bindStruct(v.Elem(), r, "")
+}
+
+func bindStruct(sct reflect.Value, r *http.Request, prefix string) error {
 	sctType := sct.Type()
 	for i := 0; i < sctType.NumField(); i++ {
 		fieldName := sctType.Field(i)
@@ -52,8 +55,17 @@ func doFormBind(target interface{}, r *http.Request) error {
 		}
 
 		field := sct.FieldByName(fieldName.Name)
-		value := r.FormValue(urlTag)
-		if err := setField(field, value); err != nil {
+		value := r.FormValue(prefix + urlTag)
+
+		var err error
+		switch field.Type().Kind() {
+		case reflect.Struct:
+			err = bindStruct(field, r, prefix+urlTag+".")
+		default:
+			err = setField(field, value)
+		}
+
+		if err != nil {
 			return nil
 		}
 	}
@@ -68,6 +80,13 @@ func setField(field reflect.Value, formValue string) error {
 	case reflect.Int:
 		intValue, _ := strconv.Atoi(formValue)
 		field.Set(reflect.ValueOf(intValue))
+	case reflect.Bool:
+		switch formValue {
+		case "1", "t", "T", "true", "TRUE", "True", "on", "ON":
+			field.Set(reflect.ValueOf(true))
+		case "0", "f", "F", "false", "FALSE", "False", "off", "OFF":
+			field.Set(reflect.ValueOf(false))
+		}
 	}
 
 	return nil
