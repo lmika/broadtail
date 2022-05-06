@@ -78,8 +78,7 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 		runContext.PostMessage(fmt.Sprintf("Downloading video: attempt %d of 3", attempt))
 
 		var err error
-		outputFilename, err = y.DownloadProvider.DownloadVideo(ctx, models.DownloadOptions{
-			YoutubeID: y.YoutubeId,
+		outputFilename, err = y.DownloadProvider.DownloadVideo(ctx, y.YoutubeId, models.DownloadOptions{
 			TargetDir: y.TargetDir,
 		}, func(line string) {
 			if prog, ok := parseProgress(line); ok {

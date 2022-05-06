@@ -1,6 +1,6 @@
 package models
 
 type DownloadOptions struct {
-	YoutubeID string
+	//YoutubeID string
 	TargetDir string
 }

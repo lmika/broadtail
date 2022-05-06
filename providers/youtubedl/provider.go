@@ -61,11 +61,11 @@ func (p *Provider) GetVideoMetadata(ctx context.Context, youtubeId string) (*mod
 
 // "python3", "/usr/local/bin/youtube-dl"
 
-func (p *Provider) DownloadVideo(ctx context.Context, options models.DownloadOptions, logline func(line string)) (string, error) {
+func (p *Provider) DownloadVideo(ctx context.Context, youtubeId string, options models.DownloadOptions, logline func(line string)) (string, error) {
 	const filenameFormat = "%(title)s.%(id)s.%(ext)s"
 
 	// Get the expected filename
-	downloadUrl := fmt.Sprintf("https://www.youtube.com/watch?v=%v", options.YoutubeID)
+	downloadUrl := fmt.Sprintf("https://www.youtube.com/watch?v=%v", youtubeId)
 	filenameCmd := p.buildYoutubeDLCommand(ctx, "-f", "mp4[height<=720]",
 		"--get-filename", "-o", filenameFormat, "--restrict-filenames", downloadUrl)
 	out, err := filenameCmd.Output()

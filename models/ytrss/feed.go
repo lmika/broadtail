@@ -16,4 +16,7 @@ type Entry struct {
 	Title     string    `xml:"http://www.w3.org/2005/Atom title"`
 	Link      string    `xml:"http://www.w3.org/2005/Atom link"`
 	Published time.Time `xml:"http://www.w3.org/2005/Atom published"`
+	Media     struct {
+		Description string `xml:"http://search.yahoo.com/mrss/ description"`
+	} `xml:"http://search.yahoo.com/mrss/ group"`
 }

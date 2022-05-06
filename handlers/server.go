@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"github.com/lmika/broadtail/services/videodownload"
 	"html/template"
 	"io/fs"
 	"log"
@@ -104,15 +105,16 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 		LibraryOwner: config.LibraryOwner,
 	}, youtubedlProvider, feedsStore, videoStore, plexProvider)
 
-	favouriteService := favourites.NewService(favouriteStore, ytdownloadService, feedsStore, feedItemStore)
-	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher, favouriteService)
 	jobsManager := jobsmanager.New(dispatcher, jobStore)
+	favouriteService := favourites.NewService(favouriteStore, ytdownloadService, feedsStore, feedItemStore)
+	vidDownloadService := videodownload.NewService(ytdownloadService, jobsManager)
+	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher, favouriteService, rulesStore, vidDownloadService)
 	videoManager := videomanager.New(config.LibraryDir, videoStore)
 	rulesService := rules.NewService(rulesStore)
 
 	go jobsManager.Start()
 
-	// Schedule updates every 15 minutes
+	// Schedule updates every hour
 	c := cron.New()
 	if err := c.AddFunc("@every 15m", func() {
 		if err := feedsManager.UpdateAllFeeds(context.Background()); err != nil {
