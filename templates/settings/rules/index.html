@@ -9,16 +9,17 @@
     </tr>
     </thead>
     <tbody>
+    {{range .rules}}
     <tr>
-        <td><a href="#">This is rule 1</a></td>
-        <td>When feed is "This"<br>Then download</td>
-        <td><a href="#" data-method="DELETE" data-confirm="Delete rule?">Delete</a></td>
+        <td><a href="/settings/rules/{{.ID}}">{{.Name}}</a></td>
+        <td>{{.Description}}</td>
+        <td><a href="/settings/rules/{{.ID}}" data-method="DELETE" data-confirm="Delete rule?">Delete</a></td>
     </tr>
+    {{else}}
     <tr>
-        <td><a href="#">This is rule 2</a></td>
-        <td>Feed is "This"</td>
-        <td><a href="#" data-method="DELETE" data-confirm="Delete rule?">Delete</a></td>
+        <td colspan="3" class="empty-table">No rules defined</td>
     </tr>
+    {{end}}
     </tbody>
 </table>
 

@@ -37,6 +37,8 @@ github.com/lmika/gopkgs v0.0.0-20220504050439-b17568aa1dcd h1:iHrlVmnZPIk6ogBupI
 github.com/lmika/gopkgs v0.0.0-20220504050439-b17568aa1dcd/go.mod h1:ZhbQLs7bpOOZvMd0PmQVDAoY8cRD99SRr/cKGfqX3R8=
 github.com/lmika/gopkgs v0.0.0-20220504060120-48c3e4f681e8 h1:bwG8ayehH/J+GzNcLLF992DkmVS9rCaaDf1ERfMg1U4=
 github.com/lmika/gopkgs v0.0.0-20220504060120-48c3e4f681e8/go.mod h1:ZhbQLs7bpOOZvMd0PmQVDAoY8cRD99SRr/cKGfqX3R8=
+github.com/lmika/gopkgs v0.0.0-20220506004113-27a4af22b31a h1:2qbonKzTnUXG8R7JB84SLRNPLTmRCPDK4rPvLfhoJzo=
+github.com/lmika/gopkgs v0.0.0-20220506004113-27a4af22b31a/go.mod h1:ZhbQLs7bpOOZvMd0PmQVDAoY8cRD99SRr/cKGfqX3R8=
 github.com/lmika/shellwords v0.0.0-20140714114018-ce258dd729fe h1:1UXS/6OFkbi6JrihPykmYO1VtsABB02QQ+YmYYzTY18=
 github.com/lmika/shellwords v0.0.0-20140714114018-ce258dd729fe/go.mod h1:qpdOkLougV5Yry4Px9f1w1pNMavcr6Z67VW5Ro+vW5I=
 github.com/mergestat/timediff v0.0.2 h1:ZJ3RSPw1ZjxJckpXh5iDvogU/D4MLQxH97ADu9Tj8Z8=

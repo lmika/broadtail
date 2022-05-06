@@ -1,17 +1,19 @@
-<form method="POST" action="/settings/rules">
+{{$rule := .rule}}
+{{$tmplArgs := .tmplArgs}}
+<form method="POST" action="{{$tmplArgs.Path}}">
     <div>
-        <h3>New Rule</h3>
+        <h3>{{$tmplArgs.Title}}</h3>
 
         <div class="fields">
             <div class="field">
                 <div class="field-name"><label>Name</label></div>
-                <div class="field-value"><input name="name" value="" class="mid-text-field"></div>
+                <div class="field-value"><input name="name" value="{{.rule.Name}}" class="mid-text-field"></div>
             </div>
             <div class="field">
                 <div class="field-name"></div>
                 <div class="field-value">
                     <label>
-                        <input name="active" type="checkbox" checked>
+                        <input name="active" type="checkbox" {{and $rule.Active "checked"}}>
                         Active
                     </label>
                 </div>
@@ -25,9 +27,9 @@
                 <div class="field-name"><label>Feed is</label></div>
                 <div class="field-value">
                     <select name="condition.feedId">
-                        <option value="">(any)</option>
+                        <option value="00000000-0000-0000-0000-000000000000" {{and (eq $rule.Condition.FeedID.String "00000000-0000-0000-0000-000000000000") "selected"}}>(any)</option>
                         {{range .feeds}}
-                            <option value="{{.ID}}">{{.Name}}</option>
+                            <option value="{{.ID}}" {{and (eq $rule.Condition.FeedID.String .ID.String) "selected"}}>{{.Name}}</option>
                         {{end}}
                     </select>
                 </div>
@@ -35,7 +37,13 @@
             <div class="field">
                 <div class="field-name"><label>Title matches</label></div>
                 <div class="field-value">
-                    <input name="condition.title" value="" class="large-text-field">
+                    <input name="condition.title" value="{{$rule.Condition.Title}}" class="large-text-field">
+                </div>
+            </div>
+            <div class="field">
+                <div class="field-name"><label>Description matches</label></div>
+                <div class="field-value">
+                    <input name="condition.description" value="{{$rule.Condition.Description}}" class="large-text-field">
                 </div>
             </div>
         </div>
@@ -47,7 +55,7 @@
                 <div class="field-name"></div>
                 <div class="field-value">
                     <label>
-                        <input name="action.download" type="checkbox">
+                        <input name="action.download" type="checkbox" {{and $rule.Action.Download "checked"}}>
                         Download
                     </label>
                 </div>
@@ -56,7 +64,7 @@
                 <div class="field-name"></div>
                 <div class="field-value">
                     <label>
-                        <input name="action.markFavourite" type="checkbox">
+                        <input name="action.markFavourite" type="checkbox" {{and $rule.Action.MarkFavourite "checked"}}>
                         Mark as favourite
                     </label>
                 </div>
@@ -64,7 +72,7 @@
         </div>
 
         <div class="rel-links">
-            <input type="submit" value="Create Rule">
+            <input type="submit" value="Save">
         </div>
     </div>
 </form>

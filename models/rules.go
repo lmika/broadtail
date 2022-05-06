@@ -3,8 +3,9 @@ package models
 import "github.com/google/uuid"
 
 type RuleCondition struct {
-	FeedID uuid.UUID `req:"feedId"`
-	Title  string    `req:"title"`
+	FeedID      uuid.UUID `req:"feedId"`
+	Title       string    `req:"title"`
+	Description string    `req:"description"`
 }
 
 type RuleAction struct {
@@ -18,4 +19,9 @@ type Rule struct {
 	Active    bool          `req:"active,zero"`
 	Condition RuleCondition `req:"condition"`
 	Action    RuleAction    `req:"action"`
+}
+
+type RuleWithDescription struct {
+	Rule
+	Description string
 }

@@ -50,6 +50,7 @@ func main() {
 		LibraryOwner:        cfg.LibraryOwner,
 		PlexBaseURL:         cfg.PlexBaseURL,
 		PlexToken:           cfg.PlexToken,
+		BaseDataDir:         cfg.DataDir,
 		JobDataFile:         filepath.Join(cfg.DataDir, "jobs.db"),
 		VideoDataFile:       filepath.Join(cfg.DataDir, "videos.db"),
 		FeedsDataFile:       filepath.Join(cfg.DataDir, "feeds.db"),

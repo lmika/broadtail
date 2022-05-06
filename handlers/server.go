@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/lmika/broadtail/providers/plexprovider"
 	"github.com/lmika/broadtail/services/favourites"
+	"github.com/lmika/broadtail/services/rules"
 	"github.com/lmika/gopkgs/http/middleware/render"
 
 	"github.com/lmika/broadtail/services/videomanager"
@@ -36,6 +37,7 @@ type Config struct {
 	LibraryDir   string
 	LibraryOwner string
 
+	BaseDataDir        string
 	JobDataFile        string
 	VideoDataFile      string
 	FeedsDataFile      string
@@ -54,6 +56,8 @@ type Config struct {
 
 func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	dispatcher := jobs.New()
+	dbManager := stormstore.NewDBManager(config.BaseDataDir)
+	defer dbManager.Close()
 
 	jobStore, err := stormstore.NewJobStore(config.JobDataFile)
 	if err != nil {
@@ -75,6 +79,11 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "cannot open favourites store")
 	}
+	rulesStore, err := stormstore.NewRulesStore(dbManager)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cannot open rules store")
+	}
+
 	rssFetcher := rssfetcher.New()
 
 	var youtubedlProvider ytdownload.DownloadProvider
@@ -99,6 +108,8 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher, favouriteService)
 	jobsManager := jobsmanager.New(dispatcher, jobStore)
 	videoManager := videomanager.New(config.LibraryDir, videoStore)
+	rulesService := rules.NewService(rulesStore)
+
 	go jobsManager.Start()
 
 	// Schedule updates every 15 minutes
@@ -119,7 +130,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	jobsHandlers := &jobsHandlers{jobsManager: jobsManager}
 	feedsHandlers := &feedsHandler{feedsManager: feedsManager}
 	favouritesHandlers := &favouritesHandler{favouriteService: favouriteService}
-	settingHandlers := &settingHandlers{feedManager: feedsManager}
+	settingHandlers := &settingHandlers{rulesService: rulesService, feedManager: feedsManager}
 
 	r := mux.NewRouter()
 	r.Handle("/", indexHandlers.Index()).Methods("GET")
