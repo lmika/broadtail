@@ -3,6 +3,8 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"github.com/lmika/broadtail/handlers/monitor"
+	"github.com/lmika/broadtail/handlers/settings"
 	"github.com/lmika/broadtail/services/videodownload"
 	"html/template"
 	"io/fs"
@@ -128,11 +130,13 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	indexHandlers := &indexHandlers{jobsManager: jobsManager, feedsManager: feedsManager, upgrader: websocket.Upgrader{}}
 	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService, jobsManager: jobsManager}
 	detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService, videoManager: videoManager, favouriteService: favouriteService}
-	videoHandler := &videoHandlers{videoManager: videoManager}
-	jobsHandlers := &jobsHandlers{jobsManager: jobsManager}
+	videoHandler := &monitor.VideoHandlers{VideoManager: videoManager}
+	jobsHandlers := &monitor.JobsHandlers{JobsManager: jobsManager}
 	feedsHandlers := &feedsHandler{feedsManager: feedsManager}
 	favouritesHandlers := &favouritesHandler{favouriteService: favouriteService}
-	settingHandlers := &settingHandlers{rulesService: rulesService, feedManager: feedsManager}
+
+	settingIndexHandlers := &settings.IndexHandlers{}
+	settingRulesHandlers := &settings.RulesHandlers{RulesService: rulesService, FeedManager: feedsManager}
 
 	r := mux.NewRouter()
 	r.Handle("/", indexHandlers.Index()).Methods("GET")
@@ -142,17 +146,18 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	r.Handle("/quicklook", detailsHandler.QuickLook()).Methods("GET")
 	r.Handle("/details/video/{video_id}", detailsHandler.VideoDetails()).Methods("GET")
 
-	r.Handle("/videos", videoHandler.List()).Methods("GET")
-	r.Handle("/videos/{video_id}", videoHandler.Show()).Methods("GET")
+	r.Handle("/monitor/videos", videoHandler.List()).Methods("GET")
+	r.Handle("/monitor/videos/{video_id}", videoHandler.Show()).Methods("GET")
 
-	r.Handle("/jobs", jobsHandlers.List()).Methods("GET")
-	r.Handle("/jobs/done", jobsHandlers.ClearDone()).Methods("DELETE")
-	r.Handle("/jobs/{job_id}", jobsHandlers.Show()).Methods("GET")
-	r.Handle("/jobs/{job_id}", jobsHandlers.Delete()).Methods("DELETE")
+	r.Handle("/monitor/jobs", jobsHandlers.List()).Methods("GET")
+	r.Handle("/monitor/jobs/done", jobsHandlers.ClearDone()).Methods("DELETE")
+	r.Handle("/monitor/jobs/{job_id}", jobsHandlers.Show()).Methods("GET")
+	r.Handle("/monitor/jobs/{job_id}", jobsHandlers.Delete()).Methods("DELETE")
 
 	feedsHandlers.Routes(r)
 	favouritesHandlers.Routes(r)
-	settingHandlers.Routes(r)
+	settingIndexHandlers.Routes(r)
+	settingRulesHandlers.Routes(r)
 
 	r.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.FS(config.AssetFS))))
 

@@ -12,7 +12,7 @@
         <tbody>
             {{range .runningJobs}}
             <tr>
-                <td><a href="/jobs/{{.ID}}">{{.Name}}</a></td>
+                <td><a href="/monitor/jobs/{{.ID}}">{{.Name}}</a></td>
                 <td class="progressbar">
                     <div class="progressbar">
                         <div class="complete" style="width: {{mup .LastUpdate.Percent 2}}px">
@@ -21,12 +21,12 @@
                         <span class="label">{{.LastUpdate.Summary}}</span>
                     </div>
                 </td>
-                <td><a href="/jobs/{{.ID}}" data-method="DELETE" data-confirm="Cancel job?">Cancel</a></td>
+                <td><a href="/monitor/jobs/{{.ID}}" data-method="DELETE" data-confirm="Cancel job?">Cancel</a></td>
             </tr>
             {{end}}
             {{range .historicalJobs}}
             <tr>
-                <td><a href="/jobs/{{.ID}}">{{.Name}}</a></td>
+                <td><a href="/monitor/jobs/{{.ID}}">{{.Name}}</a></td>
                 <td class="progressbar">
                     <div class="progressbar">
                         <div class="complete" style="width: {{mup .LastUpdate.Percent 2}}px">

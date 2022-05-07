@@ -1,4 +1,4 @@
-package handlers
+package settings
 
 import (
 	"context"
@@ -16,25 +16,16 @@ import (
 	"github.com/lmika/gopkgs/http/middleware/render"
 )
 
-type settingHandlers struct {
-	rulesService *rules.Service
-	feedManager  *feedsmanager.FeedsManager
+type RulesHandlers struct {
+	RulesService *rules.Service
+	FeedManager  *feedsmanager.FeedsManager
 }
 
-func (settingHandlers) index() http.Handler {
+func (sh *RulesHandlers) index() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 		render.UseFrame(r, "frames/settings.html")
 
-		render.HTML(r, w, http.StatusOK, "settings/general.html")
-		return nil
-	})
-}
-
-func (sh *settingHandlers) rules() http.Handler {
-	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-		render.UseFrame(r, "frames/settings.html")
-
-		rules, err := sh.rulesService.List(ctx)
+		rules, err := sh.RulesService.List(ctx)
 		if err != nil {
 			return errors.Wrap(err, "cannot get list of rules")
 		}
@@ -45,9 +36,9 @@ func (sh *settingHandlers) rules() http.Handler {
 	})
 }
 
-func (sh *settingHandlers) newRule() http.Handler {
+func (sh *RulesHandlers) newRule() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-		feeds, err := sh.feedManager.List(ctx)
+		feeds, err := sh.FeedManager.List(ctx)
 		if err != nil {
 			return errors.Wrap(err, "cannot list feeds")
 		}
@@ -65,19 +56,19 @@ func (sh *settingHandlers) newRule() http.Handler {
 	})
 }
 
-func (sh *settingHandlers) getRule() http.Handler {
+func (sh *RulesHandlers) getRule() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 		ruleId, err := uuid.Parse(mux.Vars(r)["id"])
 		if err != nil {
 			return errhandler.Errorf(http.StatusBadRequest, "invalid feed ID: %v", err.Error())
 		}
 
-		rule, err := sh.rulesService.Get(ctx, ruleId)
+		rule, err := sh.RulesService.Get(ctx, ruleId)
 		if err != nil {
 			return errhandler.Errorf(http.StatusNotFound, "rule with ID not found: %v", ruleId)
 		}
 
-		feeds, err := sh.feedManager.List(ctx)
+		feeds, err := sh.FeedManager.List(ctx)
 		if err != nil {
 			return errors.Wrap(err, "cannot list feeds")
 		}
@@ -93,7 +84,7 @@ func (sh *settingHandlers) getRule() http.Handler {
 	})
 }
 
-func (sh *settingHandlers) createRule() http.Handler {
+func (sh *RulesHandlers) createRule() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 		var newRule models.Rule
 
@@ -102,7 +93,7 @@ func (sh *settingHandlers) createRule() http.Handler {
 			return errhandler.Errorf(http.StatusBadRequest, "invalid request")
 		}
 
-		if err := sh.rulesService.Save(ctx, &newRule); err != nil {
+		if err := sh.RulesService.Save(ctx, &newRule); err != nil {
 			return errors.Wrap(err, "unable to save rule")
 		}
 
@@ -111,14 +102,14 @@ func (sh *settingHandlers) createRule() http.Handler {
 	})
 }
 
-func (sh *settingHandlers) updateRule() http.Handler {
+func (sh *RulesHandlers) updateRule() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 		ruleId, err := uuid.Parse(mux.Vars(r)["id"])
 		if err != nil {
 			return errhandler.Errorf(http.StatusBadRequest, "invalid feed ID: %v", err.Error())
 		}
 
-		rule, err := sh.rulesService.Get(ctx, ruleId)
+		rule, err := sh.RulesService.Get(ctx, ruleId)
 		if err != nil {
 			return errhandler.Errorf(http.StatusNotFound, "rule with ID not found: %v", ruleId)
 		}
@@ -127,7 +118,7 @@ func (sh *settingHandlers) updateRule() http.Handler {
 			return errhandler.Errorf(http.StatusBadRequest, "invalid request")
 		}
 
-		if err := sh.rulesService.Save(ctx, rule); err != nil {
+		if err := sh.RulesService.Save(ctx, rule); err != nil {
 			return errors.Wrap(err, "unable to save rule")
 		}
 
@@ -136,14 +127,14 @@ func (sh *settingHandlers) updateRule() http.Handler {
 	})
 }
 
-func (sh *settingHandlers) deleteRule() http.Handler {
+func (sh *RulesHandlers) deleteRule() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 		ruleId, err := uuid.Parse(mux.Vars(r)["id"])
 		if err != nil {
 			return errhandler.Errorf(http.StatusBadRequest, "invalid feed ID: %v", err.Error())
 		}
 
-		if err := sh.rulesService.Delete(ctx, ruleId); err != nil {
+		if err := sh.RulesService.Delete(ctx, ruleId); err != nil {
 			return errors.Wrap(err, "unable to delete rule")
 		}
 
@@ -152,9 +143,8 @@ func (sh *settingHandlers) deleteRule() http.Handler {
 	})
 }
 
-func (sh *settingHandlers) Routes(r *mux.Router) {
-	r.Handle("/settings", sh.index()).Methods("GET")
-	r.Handle("/settings/rules", sh.rules()).Methods("GET")
+func (sh *RulesHandlers) Routes(r *mux.Router) {
+	r.Handle("/settings/rules", sh.index()).Methods("GET")
 	r.Handle("/settings/rules", sh.createRule()).Methods("POST")
 	r.Handle("/settings/rules/new", sh.newRule()).Methods("GET")
 	r.Handle("/settings/rules/{id}", sh.getRule()).Methods("GET")

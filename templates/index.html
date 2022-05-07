@@ -12,7 +12,7 @@
         <tbody>
             {{range .jobs}}
             <tr>
-                <td><a href="/jobs/{{.ID}}">{{.Name}}</a></td>
+                <td><a href="/monitor/jobs/{{.ID}}">{{.Name}}</a></td>
                 <td class="progressbar">
                     <div class="progressbar" data-controller="job-status-progressbar"
                          data-job-status-progressbar-job-id-value="{{.ID}}"
@@ -23,7 +23,7 @@
                         <span class="label" data-job-status-progressbar-target="summary">{{.LastUpdate.Summary}}</span>
                     </div>
                 </td>
-                <td><a href="/jobs/{{.ID}}" data-method="DELETE" data-confirm="Cancel job?">Cancel</a></td>
+                <td><a href="/monitor/jobs/{{.ID}}" data-method="DELETE" data-confirm="Cancel job?">Cancel</a></td>
             </tr>
             {{else}}
             <tr>
@@ -36,7 +36,7 @@
     <div class="rel-links">
         <a href="/">Refresh</a>
         <span class="divider"></span>
-        <a href="/jobs">History</a>
+        <a href="/monitor/jobs">History</a>
     </div>
 
     <h3>Recent Feed Items</h3>
