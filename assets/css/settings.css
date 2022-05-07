@@ -9,6 +9,7 @@ div.settings-frame {
 
 div.settings-section {
     width: 200px;
+    flex-shrink: 0;
 }
 
 div.settings-main {

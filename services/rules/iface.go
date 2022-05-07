@@ -13,3 +13,7 @@ type RuleStore interface {
 	Get(ctx context.Context, ruleID uuid.UUID) (*models.Rule, error)
 	Delete(ctx context.Context, ruleID uuid.UUID) error
 }
+
+type FeedStore interface {
+	Get(ctx context.Context, id uuid.UUID) (models.Feed, error)
+}

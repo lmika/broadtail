@@ -37,6 +37,6 @@ div.field-value {
     margin: 4px;
 }
 
-div.pre-wrap {
+.pre-wrap {
     white-space: pre-wrap;
 }

@@ -3,7 +3,7 @@
 <table>
     <thead>
     <tr>
-        <th>Name</th>
+        <th style="width:30%">Name</th>
         <th>Description</th>
         <th></th>
     </tr>
@@ -12,7 +12,7 @@
     {{range .rules}}
     <tr>
         <td><a href="/settings/rules/{{.ID}}">{{.Name}}</a></td>
-        <td>{{.Description}}</td>
+        <td class="pre-wrap">{{.Description}}</td>
         <td><a href="/settings/rules/{{.ID}}" data-method="DELETE" data-confirm="Delete rule?">Delete</a></td>
     </tr>
     {{else}}

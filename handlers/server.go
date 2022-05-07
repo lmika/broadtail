@@ -110,7 +110,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	vidDownloadService := videodownload.NewService(ytdownloadService, jobsManager)
 	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher, favouriteService, rulesStore, vidDownloadService)
 	videoManager := videomanager.New(config.LibraryDir, videoStore)
-	rulesService := rules.NewService(rulesStore)
+	rulesService := rules.NewService(rulesStore, feedsStore)
 
 	go jobsManager.Start()
 
