@@ -10,6 +10,7 @@
 @import "./messages.css";
 @import "./form.css";
 @import "./progress.css";
+@import "./settings.css";
 
 html {
     min-height: 100%;
@@ -34,6 +35,9 @@ div.frame {
     margin: 3px auto;
     border-radius: 6px;
     border: solid thin var(--border-color);
+
+    display: flex;
+    flex-direction: column;
 }
 
 a {
@@ -48,6 +52,13 @@ header a {
 
 header h1 {
     margin: 12px var(--main-horizontal-padding) 8px;
+}
+
+article {
+    flex-grow: 1;
+
+    display: flex;
+    flex-direction: column;
 }
 
 article h3 {

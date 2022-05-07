@@ -1,21 +1,22 @@
-package handlers
+package monitor
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/lmika/broadtail/middleware/errhandler"
 	"github.com/lmika/broadtail/middleware/jobdispatcher"
-	"github.com/lmika/broadtail/middleware/render"
 	"github.com/lmika/broadtail/services/jobsmanager"
-	"net/http"
+	"github.com/lmika/gopkgs/http/middleware/render"
 )
 
-type jobsHandlers struct {
-	jobsManager *jobsmanager.JobsManager
+type JobsHandlers struct {
+	JobsManager *jobsmanager.JobsManager
 }
 
-func (h *jobsHandlers) Delete() http.Handler {
+func (h *JobsHandlers) Delete() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 		jobIdStr := mux.Vars(r)["job_id"]
 		jobId, err := uuid.Parse(jobIdStr)
@@ -23,7 +24,7 @@ func (h *jobsHandlers) Delete() http.Handler {
 			return errhandler.Errorf(http.StatusBadRequest, "invalid job ID: %v", err.Error())
 		}
 
-		job := h.jobsManager.Dispatcher().Job(jobId)
+		job := h.JobsManager.Dispatcher().Job(jobId)
 		if job == nil {
 			return errhandler.Errorf(http.StatusNotFound, "job %v not found", jobId)
 		}
@@ -35,7 +36,7 @@ func (h *jobsHandlers) Delete() http.Handler {
 	})
 }
 
-func (ytdl *jobsHandlers) ClearDone() http.Handler {
+func (ytdl *JobsHandlers) ClearDone() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 		dispatcher := jobdispatcher.FromContext(ctx).Dispatcher
 		dispatcher.ClearDone()
@@ -46,21 +47,23 @@ func (ytdl *jobsHandlers) ClearDone() http.Handler {
 	})
 }
 
-func (h *jobsHandlers) List() http.Handler {
+func (h *JobsHandlers) List() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-		historialJobs, err := h.jobsManager.HistoricalJobs()
+		render.UseFrame(r, "frames/history.html")
+
+		historialJobs, err := h.JobsManager.HistoricalJobs()
 		if err != nil {
 			return err
 		}
 
-		render.Set(r, "runningJobs", h.jobsManager.RecentJobs())
+		render.Set(r, "runningJobs", h.JobsManager.RecentJobs())
 		render.Set(r, "historicalJobs", historialJobs)
 		render.HTML(r, w, http.StatusOK, "jobs/index.html")
 		return nil
 	})
 }
 
-func (h *jobsHandlers) Show() http.Handler {
+func (h *JobsHandlers) Show() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 		jobIdStr := mux.Vars(r)["job_id"]
 		jobId, err := uuid.Parse(jobIdStr)
@@ -68,7 +71,7 @@ func (h *jobsHandlers) Show() http.Handler {
 			return errhandler.Errorf(http.StatusBadRequest, "invalid job ID: %v", err.Error())
 		}
 
-		job, err := h.jobsManager.Job(jobId)
+		job, err := h.JobsManager.Job(jobId)
 		if err != nil {
 			return err
 		}

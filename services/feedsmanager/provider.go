@@ -20,9 +20,17 @@ type FeedItemStore interface {
 	Get(ctx context.Context, id uuid.UUID) (*models.FeedItem, error)
 	ListRecentsFromAllFeeds(ctx context.Context, filterExpression models.FeedItemFilter, page, count int) ([]models.FeedItem, error)
 	ListRecent(ctx context.Context, feedID uuid.UUID, filterExpression models.FeedItemFilter, page int) ([]models.FeedItem, error)
-	PutIfAbsent(ctx context.Context, item *models.FeedItem) error
+	PutIfAbsent(ctx context.Context, item *models.FeedItem) (wasInserted bool, err error)
 }
 
 type RSSFetcher interface {
 	GetForFeed(ctx context.Context, feed models.Feed) ([]ytrss.Entry, error)
+}
+
+type RulesStore interface {
+	List(ctx context.Context) ([]*models.Rule, error)
+}
+
+type VideoDownloader interface {
+	QueueForDownload(ctx context.Context, videoRef models.VideoRef, feedID uuid.UUID) error
 }

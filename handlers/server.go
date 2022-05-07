@@ -3,14 +3,20 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/lmika/broadtail/providers/plexprovider"
-	"github.com/lmika/broadtail/services/favourites"
+	"github.com/lmika/broadtail/handlers/monitor"
+	"github.com/lmika/broadtail/handlers/settings"
+	"github.com/lmika/broadtail/services/videodownload"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/lmika/broadtail/providers/plexprovider"
+	"github.com/lmika/broadtail/services/favourites"
+	"github.com/lmika/broadtail/services/rules"
+	"github.com/lmika/gopkgs/http/middleware/render"
 
 	"github.com/lmika/broadtail/services/videomanager"
 	"github.com/mergestat/timediff"
@@ -18,7 +24,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/lmika/broadtail/middleware/jobdispatcher"
-	"github.com/lmika/broadtail/middleware/render"
 	"github.com/lmika/broadtail/middleware/rssfetcher"
 	"github.com/lmika/broadtail/middleware/ujs"
 	"github.com/lmika/broadtail/providers/jobs"
@@ -35,6 +40,7 @@ type Config struct {
 	LibraryDir   string
 	LibraryOwner string
 
+	BaseDataDir        string
 	JobDataFile        string
 	VideoDataFile      string
 	FeedsDataFile      string
@@ -53,6 +59,8 @@ type Config struct {
 
 func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	dispatcher := jobs.New()
+	dbManager := stormstore.NewDBManager(config.BaseDataDir)
+	defer dbManager.Close()
 
 	jobStore, err := stormstore.NewJobStore(config.JobDataFile)
 	if err != nil {
@@ -74,6 +82,11 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "cannot open favourites store")
 	}
+	rulesStore, err := stormstore.NewRulesStore(dbManager)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "cannot open rules store")
+	}
+
 	rssFetcher := rssfetcher.New()
 
 	var youtubedlProvider ytdownload.DownloadProvider
@@ -94,13 +107,16 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 		LibraryOwner: config.LibraryOwner,
 	}, youtubedlProvider, feedsStore, videoStore, plexProvider)
 
-	favouriteService := favourites.NewService(favouriteStore, ytdownloadService, feedsStore, feedItemStore)
-	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher, favouriteService)
 	jobsManager := jobsmanager.New(dispatcher, jobStore)
+	favouriteService := favourites.NewService(favouriteStore, ytdownloadService, feedsStore, feedItemStore)
+	vidDownloadService := videodownload.NewService(ytdownloadService, jobsManager)
+	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher, favouriteService, rulesStore, vidDownloadService)
 	videoManager := videomanager.New(config.LibraryDir, videoStore)
+	rulesService := rules.NewService(rulesStore, feedsStore)
+
 	go jobsManager.Start()
 
-	// Schedule updates every 15 minutes
+	// Schedule updates every hour
 	c := cron.New()
 	if err := c.AddFunc("@every 15m", func() {
 		if err := feedsManager.UpdateAllFeeds(context.Background()); err != nil {
@@ -114,10 +130,13 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	indexHandlers := &indexHandlers{jobsManager: jobsManager, feedsManager: feedsManager, upgrader: websocket.Upgrader{}}
 	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService, jobsManager: jobsManager}
 	detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService, videoManager: videoManager, favouriteService: favouriteService}
-	videoHandler := &videoHandlers{videoManager: videoManager}
-	jobsHandlers := &jobsHandlers{jobsManager: jobsManager}
+	videoHandler := &monitor.VideoHandlers{VideoManager: videoManager}
+	jobsHandlers := &monitor.JobsHandlers{JobsManager: jobsManager}
 	feedsHandlers := &feedsHandler{feedsManager: feedsManager}
 	favouritesHandlers := &favouritesHandler{favouriteService: favouriteService}
+
+	settingIndexHandlers := &settings.IndexHandlers{}
+	settingRulesHandlers := &settings.RulesHandlers{RulesService: rulesService, FeedManager: feedsManager}
 
 	r := mux.NewRouter()
 	r.Handle("/", indexHandlers.Index()).Methods("GET")
@@ -127,16 +146,18 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	r.Handle("/quicklook", detailsHandler.QuickLook()).Methods("GET")
 	r.Handle("/details/video/{video_id}", detailsHandler.VideoDetails()).Methods("GET")
 
-	r.Handle("/videos", videoHandler.List()).Methods("GET")
-	r.Handle("/videos/{video_id}", videoHandler.Show()).Methods("GET")
+	r.Handle("/monitor/videos", videoHandler.List()).Methods("GET")
+	r.Handle("/monitor/videos/{video_id}", videoHandler.Show()).Methods("GET")
 
-	r.Handle("/jobs", jobsHandlers.List()).Methods("GET")
-	r.Handle("/jobs/done", jobsHandlers.ClearDone()).Methods("DELETE")
-	r.Handle("/jobs/{job_id}", jobsHandlers.Show()).Methods("GET")
-	r.Handle("/jobs/{job_id}", jobsHandlers.Delete()).Methods("DELETE")
+	r.Handle("/monitor/jobs", jobsHandlers.List()).Methods("GET")
+	r.Handle("/monitor/jobs/done", jobsHandlers.ClearDone()).Methods("DELETE")
+	r.Handle("/monitor/jobs/{job_id}", jobsHandlers.Show()).Methods("GET")
+	r.Handle("/monitor/jobs/{job_id}", jobsHandlers.Delete()).Methods("DELETE")
 
 	feedsHandlers.Routes(r)
 	favouritesHandlers.Routes(r)
+	settingIndexHandlers.Routes(r)
+	settingRulesHandlers.Routes(r)
 
 	r.PathPrefix("/public/").Handler(http.StripPrefix("/public/", http.FileServer(http.FS(config.AssetFS))))
 
@@ -167,6 +188,8 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 				return fmt.Sprintf("%d:%02d", mins, secs)
 			},
 		}),
+		render.WithFrame("frames/main.html"),
+		render.RebuildOnChange(context.Background(), "templates"), // TEMP
 	).Use(handler)
 
 	closeFn = func() {

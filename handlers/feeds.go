@@ -7,10 +7,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/lmika/broadtail/middleware/errhandler"
-	"github.com/lmika/broadtail/middleware/render"
 	"github.com/lmika/broadtail/middleware/reqbind"
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/services/feedsmanager"
+	"github.com/lmika/gopkgs/http/middleware/render"
 )
 
 type feedsHandler struct {
@@ -200,33 +200,6 @@ func (h *feedsHandler) ShowAllRecentItems() http.Handler {
 		return nil
 	})
 }
-
-//func (h *feedsHandler) ShowAllFavourites() http.Handler {
-//	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-//		var request = struct {
-//			Query string `req:"q"`
-//			Page  int    `req:"page"`
-//		}{}
-//
-//		if err := reqbind.Bind(&request, r); err != nil {
-//			return err
-//		}
-//
-//		feedItemFilter := models.ParseFeedItemFilter(request.Query)
-//
-//		recentItems, err := h.feedsManager.RecentFeedItemsFromAllFeeds(ctx, feedItemFilter, request.Page, 50)
-//		if err != nil {
-//			return err
-//		}
-//
-//		render.Set(r, "request", request)
-//		render.Set(r, "recentFeedItems", recentItems)
-//		render.Set(r, "pageTitle", "Favourites")
-//		render.Set(r, "pagePath", "/feeds/all/favourites")
-//		render.HTML(r, w, http.StatusOK, "feeds/show_all.html")
-//		return nil
-//	})
-//}
 
 func (h *feedsHandler) Routes(r *mux.Router) {
 	r.Handle("/feeds", h.List()).Methods("GET")

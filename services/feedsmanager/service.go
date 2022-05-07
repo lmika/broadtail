@@ -19,16 +19,27 @@ type FeedsManager struct {
 	feedItemStore    FeedItemStore
 	rssFeedSource    RSSFetcher
 	favouriteService *favourites.Service
+	rulesStore       RulesStore
+	videoDownloader  VideoDownloader
 
 	feedUpdateMutex *sync.Mutex
 }
 
-func New(store FeedStore, feedProvider FeedItemStore, rssFeedSource RSSFetcher, favouriteService *favourites.Service) *FeedsManager {
+func New(
+	store FeedStore,
+	feedProvider FeedItemStore,
+	rssFeedSource RSSFetcher,
+	favouriteService *favourites.Service,
+	rulesStore RulesStore,
+	videoDownloader VideoDownloader,
+) *FeedsManager {
 	return &FeedsManager{
 		store:            store,
 		feedItemStore:    feedProvider,
 		rssFeedSource:    rssFeedSource,
+		rulesStore:       rulesStore,
 		favouriteService: favouriteService,
+		videoDownloader:  videoDownloader,
 		feedUpdateMutex:  new(sync.Mutex),
 	}
 }
@@ -69,7 +80,12 @@ func (fm *FeedsManager) UpdateFeed(ctx context.Context, id uuid.UUID) error {
 		return errors.Wrapf(err, "cannot get feed")
 	}
 
-	return fm.updateFeedItems(ctx, feed)
+	rules, err := fm.rulesStore.List(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "cannot get rules")
+	}
+
+	return fm.updateFeedItems(ctx, feed, rules)
 }
 
 func (fm *FeedsManager) UpdateAllFeeds(ctx context.Context) error {
@@ -78,8 +94,13 @@ func (fm *FeedsManager) UpdateAllFeeds(ctx context.Context) error {
 		return errors.Wrap(err, "cannot get all feeds")
 	}
 
+	rules, err := fm.rulesStore.List(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "cannot get rules")
+	}
+
 	for _, feed := range allFeeds {
-		if err := fm.updateFeedItems(ctx, feed); err != nil {
+		if err := fm.updateFeedItems(ctx, feed, rules); err != nil {
 			log.Printf("unable to update feed: %v", err)
 		}
 	}
@@ -87,7 +108,7 @@ func (fm *FeedsManager) UpdateAllFeeds(ctx context.Context) error {
 	return nil
 }
 
-func (fm *FeedsManager) updateFeedItems(ctx context.Context, feed models.Feed) error {
+func (fm *FeedsManager) updateFeedItems(ctx context.Context, feed models.Feed, rules []*models.Rule) error {
 	fm.feedUpdateMutex.Lock()
 	defer fm.feedUpdateMutex.Unlock()
 
@@ -98,14 +119,75 @@ func (fm *FeedsManager) updateFeedItems(ctx context.Context, feed models.Feed) e
 
 	for _, item := range rssItems {
 		feedItem := fm.sourceEntryToFeedItem(&feed, item)
-		if err := fm.feedItemStore.PutIfAbsent(ctx, &feedItem); err != nil {
+
+		wasInserted, err := fm.feedItemStore.PutIfAbsent(ctx, &feedItem)
+		if err != nil {
 			log.Printf("warn: cannot save item %v: %v", feedItem.EntryID, err)
+			continue
+		}
+
+		if wasInserted {
+			if err := fm.runRulesForFeedItem(ctx, &feedItem, item, rules); err != nil {
+				log.Printf("warn: error running rules for feed item %v", feedItem.ID)
+			}
 		}
 	}
 
 	feed.LastUpdatedAt = time.Now()
 	if err := fm.store.Save(ctx, &feed); err != nil {
 		return errors.Wrap(err, "cannot update feed")
+	}
+
+	return nil
+}
+
+func (fm *FeedsManager) runRulesForFeedItem(ctx context.Context, feedItem *models.FeedItem, rssEntry ytrss.Entry, rules []*models.Rule) error {
+	ruleTarget := models.RuleTarget{
+		FeedID:      feedItem.FeedID,
+		Title:       feedItem.Title,
+		Description: rssEntry.Media.Description,
+	}
+
+	// Get all matching rules
+	var matchedRules []*models.Rule
+	for _, rule := range rules {
+		if !rule.Active {
+			continue
+		}
+
+		if rule.Condition.Matches(ruleTarget) {
+			matchedRules = append(matchedRules, rule)
+		}
+	}
+	if len(matchedRules) == 0 {
+		return nil
+	}
+
+	// Combine the actions
+	var combinedAction models.RuleAction
+	for _, rule := range matchedRules {
+		combinedAction = rule.Action.Combine(combinedAction)
+	}
+
+	// Apply the actions
+	if combinedAction.Download {
+		// Start a download
+		// TODO: handle different video sources
+		if err := fm.videoDownloader.QueueForDownload(ctx, models.VideoRef{
+			Source: models.YoutubeVideoRefSource,
+			ID:     feedItem.EntryID,
+		}, feedItem.FeedID); err != nil {
+			log.Printf("warn: unable to queue download job for feed item %v: %v", feedItem.ID, err)
+		}
+	}
+	if combinedAction.MarkFavourite {
+		// Mark as a favourite
+		if _, err := fm.favouriteService.FavoriteVideoByOrigin(ctx, models.FavouriteOrigin{
+			Type: models.FeedItemOriginType,
+			ID:   feedItem.ID.String(),
+		}); err != nil {
+			log.Printf("warn: unable to add feed item %v as favourite: %v", feedItem.ID, err)
+		}
 	}
 
 	return nil

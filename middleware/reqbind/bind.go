@@ -1,12 +1,17 @@
 package reqbind
 
 import (
+	"encoding"
 	"encoding/json"
+	"github.com/pkg/errors"
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
+)
 
-	"github.com/pkg/errors"
+var (
+	textUnmarshalerType = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()
 )
 
 func Bind(target interface{}, r *http.Request) error {
@@ -21,7 +26,7 @@ func Bind(target interface{}, r *http.Request) error {
 	return nil
 }
 
-func doBind(target interface{}, r *http.Request) error { 
+func doBind(target interface{}, r *http.Request) error {
 	if r.Header.Get("Content-type") == "application/json" {
 		// JSON body
 		if err := json.NewDecoder(r.Body).Decode(target); err != nil {
@@ -42,18 +47,37 @@ func doFormBind(target interface{}, r *http.Request) error {
 		return err
 	}
 
-	sct := v.Elem()
+	return bindStruct(v.Elem(), r, "")
+}
+
+func bindStruct(sct reflect.Value, r *http.Request, prefix string) error {
 	sctType := sct.Type()
 	for i := 0; i < sctType.NumField(); i++ {
 		fieldName := sctType.Field(i)
+
 		urlTag, ok := fieldName.Tag.Lookup("req")
 		if !ok {
 			continue
 		}
 
 		field := sct.FieldByName(fieldName.Name)
-		value := r.FormValue(urlTag)
-		if err := setField(field, value); err != nil {
+
+		formName, option, hasOption := strings.Cut(urlTag, ",")
+		if hasOption && option == "zero" {
+			field.Set(reflect.Zero(field.Type()))
+		}
+
+		value := r.FormValue(prefix + formName)
+
+		var err error
+		switch field.Type().Kind() {
+		case reflect.Struct:
+			err = bindStruct(field, r, prefix+formName+".")
+		default:
+			err = setField(field, value)
+		}
+
+		if err != nil {
 			return nil
 		}
 	}
@@ -62,12 +86,28 @@ func doFormBind(target interface{}, r *http.Request) error {
 }
 
 func setField(field reflect.Value, formValue string) error {
+	// Primitives
 	switch field.Type().Kind() {
 	case reflect.String:
 		field.Set(reflect.ValueOf(formValue))
 	case reflect.Int:
 		intValue, _ := strconv.Atoi(formValue)
 		field.Set(reflect.ValueOf(intValue))
+	case reflect.Bool:
+		switch formValue {
+		case "1", "t", "T", "true", "TRUE", "True", "on", "ON":
+			field.Set(reflect.ValueOf(true))
+		case "0", "f", "F", "false", "FALSE", "False", "off", "OFF":
+			field.Set(reflect.ValueOf(false))
+		}
+	}
+
+	if field.Type().AssignableTo(textUnmarshalerType) {
+		ut := field.Interface().(encoding.TextUnmarshaler)
+		_ = ut.UnmarshalText([]byte(formValue))
+	} else if fieldPtr := field.Addr(); fieldPtr.Type().AssignableTo(textUnmarshalerType) {
+		ut := fieldPtr.Interface().(encoding.TextUnmarshaler)
+		_ = ut.UnmarshalText([]byte(formValue))
 	}
 
 	return nil

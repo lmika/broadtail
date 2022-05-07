@@ -1,0 +1,33 @@
+div.settings-frame {
+    flex-grow: 1;
+
+    display: flex;
+    flex-direction: row;
+
+    border-top: solid thin var(--border-color);
+}
+
+div.settings-section {
+    width: 200px;
+    flex-shrink: 0;
+}
+
+div.settings-main {
+    flex-grow: 1;
+    border-left: solid thin var(--border-color);
+}
+
+ul.setting-toc {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+ul.setting-toc li {
+    margin: var(--main-horizontal-padding);
+    padding: calc(var(--main-horizontal-padding) / 2) 0;
+}
+
+ul.setting-toc li:first-child {
+    margin-top: var(--main-horizontal-padding);
+}

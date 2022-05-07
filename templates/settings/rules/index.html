@@ -1,0 +1,28 @@
+<h3>Rules</h3>
+
+<table>
+    <thead>
+    <tr>
+        <th style="width:30%">Name</th>
+        <th>Description</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    {{range .rules}}
+    <tr>
+        <td><a href="/settings/rules/{{.ID}}">{{.Name}}</a></td>
+        <td class="pre-wrap">{{.Description}}</td>
+        <td><a href="/settings/rules/{{.ID}}" data-method="DELETE" data-confirm="Delete rule?">Delete</a></td>
+    </tr>
+    {{else}}
+    <tr>
+        <td colspan="3" class="empty-table">No rules defined</td>
+    </tr>
+    {{end}}
+    </tbody>
+</table>
+
+<div class="rel-links">
+    <a href="/settings/rules/new">Add Rule</a>
+</div>

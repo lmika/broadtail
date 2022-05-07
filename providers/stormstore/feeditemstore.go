@@ -24,19 +24,23 @@ func NewFeedItemStore(filename string) (*FeedItemStore, error) {
 	return &FeedItemStore{db: db}, nil
 }
 
-func (f *FeedItemStore) PutIfAbsent(ctx context.Context, item *models.FeedItem) error {
+func (f *FeedItemStore) PutIfAbsent(ctx context.Context, item *models.FeedItem) (wasInserted bool, err error) {
 	if err := f.db.Select(q.Eq("EntryID", item.EntryID)).First(&models.FeedItem{}); err != nil {
 		if !errors.Is(err, storm.ErrNotFound) {
-			return err
+			return false, err
 		}
 	} else {
 		// Item exists.  Do nothing
-		return nil
+		return false, nil
 	}
 
 	item.ID = uuid.New()
 
-	return f.db.Save(item)
+	if err := f.db.Save(item); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 func (f *FeedItemStore) ListRecentsFromAllFeeds(ctx context.Context, filterExpression models.FeedItemFilter, page, count int) (feedItems []models.FeedItem, err error) {

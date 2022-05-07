@@ -3,6 +3,7 @@
 init:
 	go get
 	npm install
+	go install github.com/lmika/rwt@latest
 
 clean:
 	-go clean
