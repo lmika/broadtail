@@ -51,7 +51,6 @@ func (dh *detailsHandler) VideoDetails() http.Handler {
 		}
 
 		video, err := videoSource.GetVideoMetadata(ctx, videoRef)
-		// video, err := dh.ytdownloadService.GetVideoMetadata(ctx, videoID)
 		if err != nil {
 			return errhandler.Wrap(err, http.StatusInternalServerError)
 		}

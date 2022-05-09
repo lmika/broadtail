@@ -25,7 +25,7 @@ func NewFeedItemStore(filename string) (*FeedItemStore, error) {
 }
 
 func (f *FeedItemStore) PutIfAbsent(ctx context.Context, item *models.FeedItem) (wasInserted bool, err error) {
-	if err := f.db.Select(q.Eq("EntryID", item.EntryID)).First(&models.FeedItem{}); err != nil {
+	if err := f.db.Select(q.Eq("VideoRef", item.VideoRef)).First(&models.FeedItem{}); err != nil {
 		if !errors.Is(err, storm.ErrNotFound) {
 			return false, err
 		}
@@ -41,6 +41,14 @@ func (f *FeedItemStore) PutIfAbsent(ctx context.Context, item *models.FeedItem) 
 	}
 
 	return true, nil
+}
+
+func (f *FeedItemStore) GetByVideoRef(ctx context.Context, videoRef models.VideoRef) (*models.FeedItem, error) {
+	var fi models.FeedItem
+	if err := f.db.One("VideoRef", videoRef, &fi); err != nil {
+		return nil, err
+	}
+	return &fi, nil
 }
 
 func (f *FeedItemStore) ListRecentsFromAllFeeds(ctx context.Context, filterExpression models.FeedItemFilter, page, count int) (feedItems []models.FeedItem, err error) {

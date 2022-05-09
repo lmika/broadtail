@@ -7,7 +7,7 @@ import (
 )
 
 type Video struct {
-	ExtID        string
+	VideoRef     VideoRef
 	ChannelID    string
 	ChannelName  string
 	Title        string
@@ -27,7 +27,7 @@ type Metadata struct {
 
 type SavedVideo struct {
 	ID       uuid.UUID `storm:"id"`
-	ExtID    string    `storm:"unique"`
+	VideoRef VideoRef  `storm:"unique"`
 	Title    string
 	FeedID   uuid.UUID
 	Source   string
@@ -58,5 +58,3 @@ func (ds DownloadStatus) String() string {
 	}
 	return "Unknown"
 }
-
-// const ExtIDPrefixYoutube = "yt:"

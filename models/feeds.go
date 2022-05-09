@@ -32,28 +32,11 @@ func (f Feed) Validate() error {
 
 type FeedItem struct {
 	ID        uuid.UUID `storm:"id"`
-	EntryID   string    `storm:"unique"`
+	VideoRef  VideoRef  `storm:"unique"`
 	FeedID    uuid.UUID `storm:"index"`
 	Title     string
 	Link      string
 	Published time.Time
-}
-
-func (fi FeedItem) VideoRef() VideoRef {
-	p, err := ParseVideoRef(fi.EntryID)
-	if err == nil {
-		return p
-	}
-
-	// Likely to be an old entry ID
-	return VideoRef{
-		Source: YoutubeVideoRefSource,
-		ID:     fi.EntryID,
-	}
-}
-
-func (fi *FeedItem) SetVideoRef(vr VideoRef) {
-	fi.EntryID = vr.String()
 }
 
 type RecentFeedItem struct {

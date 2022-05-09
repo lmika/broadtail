@@ -14,5 +14,5 @@ func NewService(provider SourceProvider) *Service {
 
 // SourceProvider returns the SourceProvider that is registered to handle videos from the given source.
 func (s *Service) SourceProvider(videoRef models.VideoRef) (SourceProvider, error) {
-	return nil, nil
+	return s.provider, nil
 }

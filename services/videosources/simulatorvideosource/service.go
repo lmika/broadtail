@@ -17,7 +17,7 @@ func NewService() Service {
 // GetVideoMetadata returns the metadata details for a sourceID.
 func (Service) GetVideoMetadata(ctx context.Context, videoRef models.VideoRef) (*models.Video, error) {
 	return &models.Video{
-		ExtID:        videoRef.String(),
+		VideoRef:     videoRef,
 		Title:        "Simulated video",
 		ChannelID:    "chan123",
 		ChannelName:  "Simulated channel",

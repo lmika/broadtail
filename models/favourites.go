@@ -56,7 +56,7 @@ type FavouriteOrigin struct {
 type VideoRefSource string
 
 const (
-	YoutubeVideoRefSource = "yt"
+	YoutubeVideoRefSource = "youtube"
 )
 
 type OriginType string

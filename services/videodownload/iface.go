@@ -1,4 +1,4 @@
-package ytdownload
+package videodownload
 
 import (
 	"context"
@@ -13,6 +13,10 @@ type DownloadProvider interface {
 
 type FeedStore interface {
 	Get(ctx context.Context, id uuid.UUID) (models.Feed, error)
+}
+
+type FeedItemStore interface {
+	GetByVideoRef(ctx context.Context, videoRef models.VideoRef) (*models.FeedItem, error)
 }
 
 type VideoStore interface {

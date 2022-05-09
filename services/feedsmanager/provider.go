@@ -32,5 +32,5 @@ type RulesStore interface {
 }
 
 type VideoDownloader interface {
-	QueueForDownload(ctx context.Context, videoRef models.VideoRef, feedID uuid.UUID) error
+	QueueForDownload(ctx context.Context, videoRef models.VideoRef, feed *models.Feed) error
 }

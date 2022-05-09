@@ -11,8 +11,9 @@ type VideoStore struct {
 	db *storm.DB
 }
 
-func (vs *VideoStore) DeleteWithExtID(extId string) error {
-	if err := vs.db.Select(q.Eq("ExtID", extId)).Delete(&models.SavedVideo{}); err != nil {
+func (vs *VideoStore) DeleteWithExtID(extId models.VideoRef) error {
+	// FIX
+	if err := vs.db.Select(q.Eq("VideoRef", extId)).Delete(&models.SavedVideo{}); err != nil {
 		if err == storm.ErrNotFound {
 			return nil
 		}
@@ -33,9 +34,10 @@ func (vs *VideoStore) FindWithID(id uuid.UUID) (*models.SavedVideo, error) {
 	return &savedVideo, nil
 }
 
-func (vs *VideoStore) FindWithExtID(extId string) (*models.SavedVideo, error) {
+func (vs *VideoStore) FindWithExtID(videoRef models.VideoRef) (*models.SavedVideo, error) {
 	var savedVideo models.SavedVideo
-	if err := vs.db.Select(q.Eq("ExtID", extId)).First(&savedVideo); err != nil {
+
+	if err := vs.db.One("VideoRef", videoRef, &savedVideo); err != nil {
 		if err == storm.ErrNotFound {
 			return nil, nil
 		} else {

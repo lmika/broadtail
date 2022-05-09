@@ -1,4 +1,4 @@
-package ytdownload
+package videodownload
 
 import (
 	"context"

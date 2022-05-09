@@ -3,6 +3,8 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"github.com/lmika/broadtail/providers/youtubedl"
+	"github.com/lmika/broadtail/services/videosources/youtubevideosource"
 	"html/template"
 	"io/fs"
 	"log"
@@ -31,10 +33,8 @@ import (
 	"github.com/lmika/broadtail/middleware/ujs"
 	"github.com/lmika/broadtail/providers/jobs"
 	"github.com/lmika/broadtail/providers/stormstore"
-	"github.com/lmika/broadtail/providers/youtubedl"
 	"github.com/lmika/broadtail/services/feedsmanager"
 	"github.com/lmika/broadtail/services/jobsmanager"
-	"github.com/lmika/broadtail/services/ytdownload"
 	"github.com/pkg/errors"
 )
 
@@ -93,28 +93,45 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 
 	var videoSourcesServices *videosources.Service
 
-	var youtubedlProvider ytdownload.DownloadProvider
+	//var youtubedlProvider ytdownload.DownloadProvider
 	if config.YTDownloadSimulator {
 		log.Println("Using youtuble-dl simulator")
 		// youtubedlProvider = ytdlsimulator.New()
 		videoSourcesServices = videosources.NewService(simulatorvideosource.NewService())
 	} else {
-		youtubedlProvider, err = youtubedl.New(config.YTDownloadCommand)
+		youtubedlProvider, err := youtubedl.New(config.YTDownloadCommand)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "cannot instantiate youtube-dl provider")
 		}
+		videoSourcesServices = videosources.NewService(youtubevideosource.NewService(youtubedlProvider))
 	}
 
 	plexProvider := plexprovider.New(config.PlexBaseURL, config.PlexToken)
 
-	ytdownloadService := ytdownload.New(ytdownload.Config{
-		LibraryDir:   config.LibraryDir,
-		LibraryOwner: config.LibraryOwner,
-	}, youtubedlProvider, feedsStore, videoStore, plexProvider)
-
+	//ytdownloadService := ytdownload.New(ytdownload.Config{
+	//	LibraryDir:   config.LibraryDir,
+	//	LibraryOwner: config.LibraryOwner,
+	//}, youtubedlProvider, feedsStore, videoStore, plexProvider)
 	jobsManager := jobsmanager.New(dispatcher, jobStore)
-	favouriteService := favourites.NewService(favouriteStore, ytdownloadService, feedsStore, feedItemStore)
-	vidDownloadService := videodownload.NewService(ytdownloadService, jobsManager)
+	vidDownloadService := videodownload.NewService(videodownload.Config{
+		LibraryDir:          config.LibraryDir,
+		LibraryOwner:        config.LibraryOwner,
+		VideoSourcesService: videoSourcesServices,
+		VideoStore:          videoStore,
+		VideoDownloadHooks:  plexProvider,
+		FeedStore:           feedsStore,
+		FeedItemStore:       feedItemStore,
+		JobsManager:         jobsManager,
+	})
+
+	favouriteService := favourites.NewService(favouriteStore, vidDownloadService, feedsStore, feedItemStore)
+	//vidDownloadService := videodownload.NewService(videodownload.Config{
+	//	LibraryDir:          config.LibraryDir,
+	//	LibraryOwner:        config.LibraryOwner,
+	//	VideoSourcesService: videoSourcesServices,
+	//	VideoStore:          videoStore,
+	//	VideoDownloadHooks:  plexProvider,
+	//})
 	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher, favouriteService, rulesStore, vidDownloadService)
 	videoManager := videomanager.New(config.LibraryDir, videoStore)
 	rulesService := rules.NewService(rulesStore, feedsStore)
@@ -133,9 +150,8 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	c.Start()
 
 	indexHandlers := &indexHandlers{jobsManager: jobsManager, feedsManager: feedsManager, upgrader: websocket.Upgrader{}}
-	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService, jobsManager: jobsManager}
-	//detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService, videoManager: videoManager, favouriteService: favouriteService}
-	detailsHandler := &detailsHandler{videoSourcesService: videoSourcesServices, videoManager: videoManager, favouriteService: favouriteService}
+	ytdownloadHandlers := &youTubeDownloadHandlers{videoDownloadService: vidDownloadService, jobsManager: jobsManager}
+	detailsHandler := &detailsHandler{videoSources: videoSourcesServices, videoManager: videoManager, favouriteService: favouriteService}
 	videoHandler := &monitor.VideoHandlers{VideoManager: videoManager}
 	jobsHandlers := &monitor.JobsHandlers{JobsManager: jobsManager}
 	feedsHandlers := &feedsHandler{feedsManager: feedsManager}
@@ -147,7 +163,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	r := mux.NewRouter()
 	r.Handle("/", indexHandlers.Index()).Methods("GET")
 	r.Handle("/ws/status", indexHandlers.StatusUpdateWebsocket()).Methods("GET")
-	r.Handle("/job/download/youtube", ytdownloadHandlers.CreateDownloadJob()).Methods("POST")
+	r.Handle("/job/download/video", ytdownloadHandlers.CreateDownloadJob()).Methods("POST")
 
 	r.Handle("/quicklook", detailsHandler.QuickLook()).Methods("GET")
 	r.Handle("/details/video/{video_id}", detailsHandler.VideoDetails()).Methods("GET")

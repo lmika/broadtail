@@ -8,5 +8,5 @@ import (
 type VideoStore interface {
 	ListRecent() ([]models.SavedVideo, error)
 	FindWithID(id uuid.UUID) (*models.SavedVideo, error)
-	FindWithExtID(id string) (*models.SavedVideo, error)
+	FindWithExtID(videoRef models.VideoRef) (*models.SavedVideo, error)
 }
