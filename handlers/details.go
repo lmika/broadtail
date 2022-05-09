@@ -23,12 +23,12 @@ type detailsHandler struct {
 
 func (dh *detailsHandler) QuickLook() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-		youtubeId := r.FormValue("youtube_id")
-		if youtubeId == "" {
-			return errhandler.Errorf(http.StatusBadRequest, "missing YouTube ID")
+		videoID := r.FormValue("video_id")
+		if videoID == "" {
+			return errhandler.Errorf(http.StatusBadRequest, "missing video ID")
 		}
 
-		http.Redirect(w, r, "/details/video/"+youtubeId, http.StatusSeeOther)
+		http.Redirect(w, r, "/details/video/"+videoID, http.StatusSeeOther)
 		return nil
 	})
 }

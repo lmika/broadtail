@@ -3,10 +3,13 @@ package videosources
 import "github.com/lmika/broadtail/models"
 
 type Service struct {
+	provider SourceProvider
 }
 
-func NewService() *Service {
-	return &Service{}
+func NewService(provider SourceProvider) *Service {
+	return &Service{
+		provider: provider,
+	}
 }
 
 // SourceProvider returns the SourceProvider that is registered to handle videos from the given source.

@@ -3,14 +3,17 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"github.com/lmika/broadtail/handlers/monitor"
-	"github.com/lmika/broadtail/handlers/settings"
-	"github.com/lmika/broadtail/services/videodownload"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/lmika/broadtail/handlers/monitor"
+	"github.com/lmika/broadtail/handlers/settings"
+	"github.com/lmika/broadtail/services/videodownload"
+	"github.com/lmika/broadtail/services/videosources"
+	"github.com/lmika/broadtail/services/videosources/simulatorvideosource"
 
 	"github.com/gorilla/websocket"
 	"github.com/lmika/broadtail/providers/plexprovider"
@@ -29,7 +32,6 @@ import (
 	"github.com/lmika/broadtail/providers/jobs"
 	"github.com/lmika/broadtail/providers/stormstore"
 	"github.com/lmika/broadtail/providers/youtubedl"
-	"github.com/lmika/broadtail/providers/ytdlsimulator"
 	"github.com/lmika/broadtail/services/feedsmanager"
 	"github.com/lmika/broadtail/services/jobsmanager"
 	"github.com/lmika/broadtail/services/ytdownload"
@@ -89,10 +91,13 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 
 	rssFetcher := rssfetcher.New()
 
+	var videoSourcesServices *videosources.Service
+
 	var youtubedlProvider ytdownload.DownloadProvider
 	if config.YTDownloadSimulator {
 		log.Println("Using youtuble-dl simulator")
-		youtubedlProvider = ytdlsimulator.New()
+		// youtubedlProvider = ytdlsimulator.New()
+		videoSourcesServices = videosources.NewService(simulatorvideosource.NewService())
 	} else {
 		youtubedlProvider, err = youtubedl.New(config.YTDownloadCommand)
 		if err != nil {
@@ -129,7 +134,8 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 
 	indexHandlers := &indexHandlers{jobsManager: jobsManager, feedsManager: feedsManager, upgrader: websocket.Upgrader{}}
 	ytdownloadHandlers := &youTubeDownloadHandlers{ytdownloadService: ytdownloadService, jobsManager: jobsManager}
-	detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService, videoManager: videoManager, favouriteService: favouriteService}
+	//detailsHandler := &detailsHandler{ytdownloadService: ytdownloadService, videoManager: videoManager, favouriteService: favouriteService}
+	detailsHandler := &detailsHandler{videoSourcesService: videoSourcesServices, videoManager: videoManager, favouriteService: favouriteService}
 	videoHandler := &monitor.VideoHandlers{VideoManager: videoManager}
 	jobsHandlers := &monitor.JobsHandlers{JobsManager: jobsManager}
 	feedsHandlers := &feedsHandler{feedsManager: feedsManager}
