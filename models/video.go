@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Video struct {
@@ -58,4 +59,4 @@ func (ds DownloadStatus) String() string {
 	return "Unknown"
 }
 
-const ExtIDPrefixYoutube = "yt:"
+// const ExtIDPrefixYoutube = "yt:"

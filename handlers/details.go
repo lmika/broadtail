@@ -9,15 +9,16 @@ import (
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/services/favourites"
 	"github.com/lmika/broadtail/services/videomanager"
-	"github.com/lmika/broadtail/services/ytdownload"
+	"github.com/lmika/broadtail/services/videosources"
 	"github.com/lmika/gopkgs/http/middleware/render"
 	"github.com/pkg/errors"
 )
 
 type detailsHandler struct {
-	ytdownloadService *ytdownload.Service
-	videoManager      *videomanager.VideoManager
-	favouriteService  *favourites.Service
+	// ytdownloadService *ytdownload.Service
+	videoSources     *videosources.Service
+	videoManager     *videomanager.VideoManager
+	favouriteService *favourites.Service
 }
 
 func (dh *detailsHandler) QuickLook() http.Handler {
@@ -39,23 +40,31 @@ func (dh *detailsHandler) VideoDetails() http.Handler {
 			return errhandler.Errorf(http.StatusBadRequest, "invalid video ID: %v", videoID)
 		}
 
-		video, err := dh.ytdownloadService.GetVideoMetadata(ctx, videoID)
+		videoRef, err := models.ParseVideoRef(videoID)
+		if err != nil {
+			return errhandler.Wrap(err, http.StatusBadRequest)
+		}
+
+		videoSource, err := dh.videoSources.SourceProvider(videoRef)
+		if err != nil {
+			return errhandler.Wrap(err, http.StatusInternalServerError)
+		}
+
+		video, err := videoSource.GetVideoMetadata(ctx, videoRef)
+		// video, err := dh.ytdownloadService.GetVideoMetadata(ctx, videoID)
 		if err != nil {
 			return errhandler.Wrap(err, http.StatusInternalServerError)
 		}
 
 		var downloadStatusStr string
-		downloadStatus, err := dh.videoManager.DownloadStatus(models.ExtIDPrefixYoutube + videoID)
+		downloadStatus, err := dh.videoManager.DownloadStatus(videoRef)
 		if err != nil {
 			downloadStatusStr = "error: " + err.Error()
 		} else {
 			downloadStatusStr = downloadStatus.String()
 		}
 
-		favouriteStatus, err := dh.favouriteService.VideoFavourited(ctx, models.VideoRef{
-			Source: models.YoutubeVideoRefSource,
-			ID:     videoID,
-		})
+		favouriteStatus, err := dh.favouriteService.VideoFavourited(ctx, videoRef)
 		if err != nil {
 			return errors.Wrap(err, "cannot get favourite status")
 		}
