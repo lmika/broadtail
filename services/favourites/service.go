@@ -3,10 +3,11 @@ package favourites
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/lmika/broadtail/models"
 	"github.com/pkg/errors"
-	"time"
 )
 
 type Service struct {
@@ -163,10 +164,11 @@ func (s *Service) lookupVideoRefByOrigin(ctx context.Context, origin models.Favo
 			return models.VideoRef{}, errors.Wrapf(err, "feed item with ID %v is missing", originId)
 		}
 
-		return models.VideoRef{
-			Source: models.YoutubeVideoRefSource,
-			ID:     feedItem.EntryID,
-		}, nil
+		return feedItem.VideoRef(), nil
+		// return models.VideoRef{
+		// 	Source: models.YoutubeVideoRefSource,
+		// 	ID:     feedItem.EntryID,
+		// }, nil
 	case models.ManualOriginType:
 		return models.VideoRef{Source: models.YoutubeVideoRefSource, ID: origin.ID}, nil
 

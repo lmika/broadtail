@@ -3,10 +3,11 @@ package feedsmanager
 import (
 	"context"
 	"fmt"
-	"github.com/lmika/broadtail/services/favourites"
 	"log"
 	"sync"
 	"time"
+
+	"github.com/lmika/broadtail/services/favourites"
 
 	"github.com/google/uuid"
 	"github.com/lmika/broadtail/models"
@@ -172,11 +173,7 @@ func (fm *FeedsManager) runRulesForFeedItem(ctx context.Context, feedItem *model
 	// Apply the actions
 	if combinedAction.Download {
 		// Start a download
-		// TODO: handle different video sources
-		if err := fm.videoDownloader.QueueForDownload(ctx, models.VideoRef{
-			Source: models.YoutubeVideoRefSource,
-			ID:     feedItem.EntryID,
-		}, feedItem.FeedID); err != nil {
+		if err := fm.videoDownloader.QueueForDownload(ctx, feedItem.VideoRef(), feedItem.FeedID); err != nil {
 			log.Printf("warn: unable to queue download job for feed item %v: %v", feedItem.ID, err)
 		}
 	}
@@ -194,13 +191,17 @@ func (fm *FeedsManager) runRulesForFeedItem(ctx context.Context, feedItem *model
 }
 
 func (fm *FeedsManager) sourceEntryToFeedItem(feed *models.Feed, entry ytrss.Entry) models.FeedItem {
-	return models.FeedItem{
+	fi := models.FeedItem{
 		FeedID:    feed.ID,
-		EntryID:   entry.VideoID,
 		Title:     entry.Title,
 		Link:      entry.Link,
 		Published: entry.Published,
 	}
+	fi.SetVideoRef(models.VideoRef{
+		Source: models.YoutubeVideoRefSource,
+		ID:     entry.VideoID,
+	})
+	return fi
 }
 
 func (fm *FeedsManager) RecentFeedItems(ctx context.Context, feed *models.Feed, filterExpression models.FeedItemFilter, page int) ([]models.RecentFeedItem, error) {
@@ -254,7 +255,7 @@ func (fm *FeedsManager) SaveFeedItem(ctx context.Context, feedItem *models.FeedI
 
 func (fm *FeedsManager) favouriteIdForFeedItem(ctx context.Context, feedItem models.FeedItem) string {
 	var favouriteId = ""
-	f, err := fm.favouriteService.VideoFavourited(ctx, models.VideoRef{Source: models.YoutubeVideoRefSource, ID: feedItem.EntryID})
+	f, err := fm.favouriteService.VideoFavourited(ctx, feedItem.VideoRef())
 	if err != nil {
 		log.Printf("warn: cannot get favourite for item with id: %v", err)
 	} else if f != nil {

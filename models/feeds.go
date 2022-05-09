@@ -39,6 +39,23 @@ type FeedItem struct {
 	Published time.Time
 }
 
+func (fi FeedItem) VideoRef() VideoRef {
+	p, err := ParseVideoRef(fi.EntryID)
+	if err == nil {
+		return p
+	}
+
+	// Likely to be an old entry ID
+	return VideoRef{
+		Source: YoutubeVideoRefSource,
+		ID:     fi.EntryID,
+	}
+}
+
+func (fi *FeedItem) SetVideoRef(vr VideoRef) {
+	fi.EntryID = vr.String()
+}
+
 type RecentFeedItem struct {
 	FeedItem    FeedItem
 	Feed        Feed

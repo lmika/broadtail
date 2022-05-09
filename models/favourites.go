@@ -1,10 +1,12 @@
 package models
 
 import (
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
+	"fmt"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
 type Favourite struct {
@@ -34,6 +36,10 @@ func ParseVideoRef(str string) (VideoRef, error) {
 	}
 
 	return VideoRef{Source: YoutubeVideoRefSource, ID: refId[1]}, nil
+}
+
+func (vr VideoRef) String() string {
+	return fmt.Sprintf("%v:%v", vr.Source, vr.ID)
 }
 
 type FavouriteOrigin struct {
