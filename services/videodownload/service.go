@@ -43,7 +43,7 @@ func (s *Service) QueueForDownload(ctx context.Context, videoRef models.VideoRef
 		return err
 	}
 
-	targetDir := s.config.LibraryDir
+	var targetDir = ""
 
 	var videoFeed *models.Feed
 	if feed != nil {
@@ -61,6 +61,7 @@ func (s *Service) QueueForDownload(ctx context.Context, videoRef models.VideoRef
 		VideoSource:       videoSource,
 		Feed:              videoFeed,
 		VideoRef:          videoRef,
+		LibraryDir:        s.config.LibraryDir,
 		TargetDir:         targetDir,
 		TargetOwner:       s.config.LibraryOwner,
 		VideoStore:        s.config.VideoStore,

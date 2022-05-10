@@ -19,6 +19,7 @@ import (
 
 type YoutubeDownloadTask struct {
 	VideoRef    models.VideoRef
+	LibraryDir  string
 	TargetDir   string
 	TargetOwner string
 
@@ -61,13 +62,14 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 	y.setTitle(metadata.Title)
 
 	// Create the directory
+	fullTargetDir := filepath.Join(y.LibraryDir, y.TargetDir)
 	if y.TargetDir != "" {
-		if err := os.MkdirAll(y.TargetDir, 0755); err != nil {
+		if err := os.MkdirAll(fullTargetDir, 0755); err != nil {
 			return errors.Wrapf(err, "cannot create target directory: %v", y.TargetDir)
 		}
 
 		// FIXME: this needs to be recursive up to the library dir
-		if err := y.changeToTargetOwner(y.TargetDir); err != nil {
+		if err := y.changeToTargetOwner(fullTargetDir); err != nil {
 			runContext.PostMessage("warn: " + err.Error())
 		}
 	}
@@ -79,7 +81,7 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 
 		var err error
 		outputFilename, err = y.VideoSource.DownloadVideo(ctx, y.VideoRef, models.DownloadOptions{
-			TargetDir: y.TargetDir,
+			TargetDir: fullTargetDir,
 		}, func(line string) {
 			if prog, ok := parseProgress(line); ok {
 				runContext.PostUpdate(jobs.Update{
@@ -122,20 +124,13 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 		runContext.PostMessage("warn: " + err.Error())
 	}
 
-	var relativeFilename = outputFilename
-	if r, err := filepath.Rel(y.TargetDir, outputFilename); err == nil {
-		relativeFilename = r
-	} else {
-		runContext.PostMessage("warn: cannot get relative filename: " + err.Error())
-	}
-
 	// Save the downloaded file details
 	savedVideo := models.SavedVideo{
 		ID:       uuid.New(),
 		VideoRef: y.VideoRef,
 		Title:    metadata.Title,
 		SavedOn:  time.Now(),
-		Location: relativeFilename,
+		Location: outputFilename,
 		FileSize: stat.Size(),
 	}
 	if y.Feed != nil {
