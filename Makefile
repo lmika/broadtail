@@ -26,6 +26,9 @@ run-sim: prep
 build-js: prep
 	rwt build
 
+release: clean
+	goreleaser release --skip-validate --skip-publish
+
 prep:
 	mkdir -p build/assets/js
 	mkdir -p build/assets/css
