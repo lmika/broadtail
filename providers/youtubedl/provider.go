@@ -74,6 +74,7 @@ func (p *Provider) DownloadVideo(ctx context.Context, youtubeId string, options 
 	}
 	outFilename := strings.TrimSpace(string(out))
 
+	logline("Target dir: " + options.TargetDir)
 	cmd := p.buildYoutubeDLCommand(ctx, "-o", filenameFormat, "--restrict-filenames",
 		"--newline", "-f", "mp4[height<=720]", downloadUrl)
 	cmd.Dir = options.TargetDir

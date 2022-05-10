@@ -5,7 +5,6 @@ import (
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/services/jobsmanager"
 	"github.com/lmika/broadtail/services/videosources"
-	"path/filepath"
 )
 
 type Config struct {
@@ -52,7 +51,7 @@ func (s *Service) QueueForDownload(ctx context.Context, videoRef models.VideoRef
 		if feedItem, err := s.config.FeedItemStore.GetByVideoRef(ctx, videoRef); err == nil {
 			if feed, err := s.config.FeedStore.Get(ctx, feedItem.FeedID); err == nil {
 				videoFeed = &feed
-				targetDir = filepath.Join(s.config.LibraryDir, feed.TargetDir)
+				targetDir = feed.TargetDir
 			}
 		}
 	}

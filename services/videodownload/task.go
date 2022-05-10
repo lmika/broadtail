@@ -130,7 +130,7 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 		VideoRef: y.VideoRef,
 		Title:    metadata.Title,
 		SavedOn:  time.Now(),
-		Location: outputFilename,
+		Location: filepath.Join(y.TargetDir, filepath.Base(outputFilename)),
 		FileSize: stat.Size(),
 	}
 	if y.Feed != nil {

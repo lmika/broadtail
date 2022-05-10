@@ -34,3 +34,4 @@ prep:
 	mkdir -p build/assets/css
 	mkdir -p build/testdata
 	echo "data_dir: `pwd`/build/testdata" > build/config.yaml
+	echo "library_dir: `pwd`/build/library" >> build/config.yaml

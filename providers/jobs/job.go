@@ -91,7 +91,7 @@ func (j *Job) exec(ctx context.Context, runContext RunContext) {
 		j.setState(runContext, StateCancelled, execCtx.Err(), nil)
 	default:
 		if err != nil {
-			runContext.PostMessage("error: " + execCtx.Err().Error())
+			runContext.PostMessage("error: " + err.Error())
 			runContext.PostUpdate(Update{Summary: "Error"})
 			j.setState(runContext, StateError, err, nil)
 		} else {
