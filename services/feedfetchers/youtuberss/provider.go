@@ -37,6 +37,12 @@ func (fm *Provider) FeedExternalURL(f models.Feed) (string, error) {
 	return "", errors.Errorf("external url unsupported for feed type: %v", f.Type)
 }
 
+func (fm *Provider) FeedHints(feed models.Feed) models.FeedHints {
+	return models.FeedHints{
+		Ordering: models.ChronologicalFeedItemOrdering,
+	}
+}
+
 func (p *Provider) getForFeed(ctx context.Context, feed models.Feed) ([]ytrss.Entry, error) {
 	switch feed.Type {
 	case models.FeedTypeYoutubeChannel:

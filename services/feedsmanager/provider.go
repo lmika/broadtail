@@ -29,6 +29,7 @@ type FeedItemStore interface {
 type FeedFetcher interface {
 	GetForFeed(ctx context.Context, feed models.Feed) ([]models.FetchedFeedItem, error)
 	FeedExternalURL(feed models.Feed) (string, error)
+	FeedHints(feed models.Feed) models.FeedHints
 }
 
 type RulesStore interface {

@@ -89,16 +89,16 @@ func setField(field reflect.Value, formValue string) error {
 	// Primitives
 	switch field.Type().Kind() {
 	case reflect.String:
-		field.Set(reflect.ValueOf(formValue))
+		field.SetString(formValue)
 	case reflect.Int:
 		intValue, _ := strconv.Atoi(formValue)
-		field.Set(reflect.ValueOf(intValue))
+		field.SetInt(int64(intValue))
 	case reflect.Bool:
 		switch formValue {
 		case "1", "t", "T", "true", "TRUE", "True", "on", "ON":
-			field.Set(reflect.ValueOf(true))
+			field.SetBool(true)
 		case "0", "f", "F", "false", "FALSE", "False", "off", "OFF":
-			field.Set(reflect.ValueOf(false))
+			field.SetBool(false)
 		}
 	}
 

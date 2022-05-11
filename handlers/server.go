@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"github.com/lmika/broadtail/services/feedfetchers/appledevvideos"
 	"html/template"
 	"io/fs"
 	"log"
@@ -96,29 +97,27 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	feedFetcher := feedfetchers.NewService(map[string]feedfetchers.FeedDriver{
 		models.FeedTypeYoutubeChannel:  youtubeRssFetcher,
 		models.FeedTypeYoutubePlaylist: youtubeRssFetcher,
+		models.FeedTypeAppleDev:        appledevvideos.NewService(),
 	})
 
-	var videoSourcesServices *videosources.Service
-
-	//var youtubedlProvider ytdownload.DownloadProvider
+	var youtubedlProvider videosources.SourceProvider
 	if config.YTDownloadSimulator {
 		log.Println("Using youtuble-dl simulator")
-		// youtubedlProvider = ytdlsimulator.New()
-		videoSourcesServices = videosources.NewService(simulatorvideosource.NewService())
+		youtubedlProvider = simulatorvideosource.NewService()
 	} else {
-		youtubedlProvider, err := youtubedl.New(config.YTDownloadCommand)
+		yp, err := youtubedl.New(config.YTDownloadCommand)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "cannot instantiate youtube-dl provider")
 		}
-		videoSourcesServices = videosources.NewService(youtubevideosource.NewService(youtubedlProvider))
+		youtubedlProvider = youtubevideosource.NewService(yp)
 	}
+
+	videoSourcesServices := videosources.NewService(map[models.VideoRefSource]videosources.SourceProvider{
+		models.YoutubeVideoRefSource: youtubedlProvider,
+	})
 
 	plexProvider := plexprovider.New(config.PlexBaseURL, config.PlexToken)
 
-	//ytdownloadService := ytdownload.New(ytdownload.Config{
-	//	LibraryDir:   config.LibraryDir,
-	//	LibraryOwner: config.LibraryOwner,
-	//}, youtubedlProvider, feedsStore, videoStore, plexProvider)
 	jobsManager := jobsmanager.New(dispatcher, jobStore)
 	vidDownloadService := videodownload.NewService(videodownload.Config{
 		LibraryDir:          config.LibraryDir,
@@ -132,13 +131,6 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	})
 
 	favouriteService := favourites.NewService(favouriteStore, vidDownloadService, feedsStore, feedItemStore)
-	//vidDownloadService := videodownload.NewService(videodownload.Config{
-	//	LibraryDir:          config.LibraryDir,
-	//	LibraryOwner:        config.LibraryOwner,
-	//	VideoSourcesService: videoSourcesServices,
-	//	VideoStore:          videoStore,
-	//	VideoDownloadHooks:  plexProvider,
-	//})
 	feedsManager := feedsmanager.New(feedsStore, feedItemStore, feedFetcher, favouriteService, rulesStore, vidDownloadService)
 	videoManager := videomanager.New(config.LibraryDir, videoStore)
 	rulesService := rules.NewService(rulesStore, feedsStore)

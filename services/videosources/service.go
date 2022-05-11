@@ -1,18 +1,25 @@
 package videosources
 
-import "github.com/lmika/broadtail/models"
+import (
+	"github.com/lmika/broadtail/models"
+	"github.com/pkg/errors"
+)
 
 type Service struct {
-	provider SourceProvider
+	providers map[models.VideoRefSource]SourceProvider
 }
 
-func NewService(provider SourceProvider) *Service {
+func NewService(providers map[models.VideoRefSource]SourceProvider) *Service {
 	return &Service{
-		provider: provider,
+		providers: providers,
 	}
 }
 
 // SourceProvider returns the SourceProvider that is registered to handle videos from the given source.
 func (s *Service) SourceProvider(videoRef models.VideoRef) (SourceProvider, error) {
-	return s.provider, nil
+	p, hasP := s.providers[videoRef.Source]
+	if !hasP {
+		return nil, errors.Errorf("unrecognised video source: %v", videoRef.Source)
+	}
+	return p, nil
 }

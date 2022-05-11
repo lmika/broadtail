@@ -76,12 +76,13 @@ func (h *feedsHandler) Show() http.Handler {
 			return err
 		}
 
-		feedItemFilter := models.ParseFeedItemFilter(request.Query)
-
 		feed, err := h.feedsManager.Get(ctx, feedId)
 		if err != nil {
 			return err
 		}
+
+		feedItemFilter := models.ParseFeedItemFilter(request.Query)
+		feedItemFilter.Ordering = feed.Ordering
 
 		externalUrl, _ := h.feedsManager.FeedExternalURL(feed)
 
@@ -128,6 +129,7 @@ func (h *feedsHandler) Edit() http.Handler {
 		}
 
 		render.Set(r, "feed", feed)
+		render.Set(r, "extendedForm", true)
 		render.HTML(r, w, http.StatusOK, "feeds/edit.html")
 		return nil
 	})

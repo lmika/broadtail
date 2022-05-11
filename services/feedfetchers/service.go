@@ -34,3 +34,13 @@ func (s *Service) FeedExternalURL(feed models.Feed) (string, error) {
 
 	return feedDriver.FeedExternalURL(feed)
 }
+
+func (s *Service) FeedHints(feed models.Feed) models.FeedHints {
+	if feedDriver, hasDriver := s.drivers[feed.Type]; hasDriver {
+		return feedDriver.FeedHints(feed)
+	}
+
+	return models.FeedHints{
+		Ordering: models.ChronologicalFeedItemOrdering,
+	}
+}

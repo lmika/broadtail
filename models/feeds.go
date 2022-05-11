@@ -10,14 +10,16 @@ import (
 const (
 	FeedTypeYoutubeChannel  = "youtube-channel"
 	FeedTypeYoutubePlaylist = "youtube-playlist"
+	FeedTypeAppleDev        = "apple-dev"
 )
 
 type Feed struct {
-	ID            uuid.UUID `storm:"id"`
-	Name          string    `req:"name"`
-	Type          string    `req:"type"`
-	ExtID         string    `req:"ext_id"`
-	TargetDir     string    `req:"target_dir"`
+	ID            uuid.UUID        `storm:"id"`
+	Name          string           `req:"name"`
+	Type          string           `req:"type"`
+	ExtID         string           `req:"ext_id"`
+	TargetDir     string           `req:"target_dir"`
+	Ordering      FeedItemOrdering `req:"ordering"`
 	CreatedAt     time.Time
 	LastUpdatedAt time.Time
 }
@@ -25,31 +27,19 @@ type Feed struct {
 func (f Feed) Validate() error {
 	return validation.ValidateStruct(&f,
 		validation.Field(&f.Name, validation.Required),
-		validation.Field(&f.Type, validation.In(FeedTypeYoutubeChannel, FeedTypeYoutubePlaylist)),
+		validation.Field(&f.Type, validation.In(FeedTypeYoutubeChannel, FeedTypeYoutubePlaylist, FeedTypeAppleDev)),
 		validation.Field(&f.ExtID, validation.Required),
+		validation.Field(&f.Ordering, validation.In(ChronologicalFeedItemOrdering, AlphabeticalFeedItemOrdering)),
 	)
 }
 
-type FeedItem struct {
-	ID        uuid.UUID `storm:"id"`
-	VideoRef  VideoRef  `storm:"unique"`
-	FeedID    uuid.UUID `storm:"index"`
-	Title     string
-	Link      string
-	Published time.Time
-}
+type FeedItemOrdering int
 
-type RecentFeedItem struct {
-	FeedItem    FeedItem
-	Feed        Feed
-	FavouriteID string
-}
+const (
+	ChronologicalFeedItemOrdering FeedItemOrdering = 0
+	AlphabeticalFeedItemOrdering                   = 1
+)
 
-// FetchedFeedItem is a feed item fetched from a RSS source
-type FetchedFeedItem struct {
-	VideoRef    VideoRef
-	Title       string
-	Description string
-	Link        string
-	Published   time.Time
+type FeedHints struct {
+	Ordering FeedItemOrdering
 }

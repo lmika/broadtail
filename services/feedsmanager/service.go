@@ -54,15 +54,6 @@ func (fm *FeedsManager) Get(ctx context.Context, id uuid.UUID) (models.Feed, err
 }
 
 func (fm *FeedsManager) FeedExternalURL(f models.Feed) (string, error) {
-	/*
-		switch f.Type {
-		case models.FeedTypeYoutubeChannel:
-			return fmt.Sprintf("https://www.youtube.com/channel/%v", f.ExtID), nil
-		case models.FeedTypeYoutubePlaylist:
-			return fmt.Sprintf("https://www.youtube.com/playlist/%v", f.ExtID), nil
-		}
-		return "", errors.Errorf("external url unsupported for feed type: %v", f.Type)
-	*/
 	return fm.feedFetcher.FeedExternalURL(f)
 }
 
@@ -70,6 +61,9 @@ func (fm *FeedsManager) Save(ctx context.Context, feed *models.Feed) error {
 	if feed.ID == uuid.Nil {
 		feed.ID = uuid.New()
 		feed.CreatedAt = time.Now()
+
+		fs := fm.feedFetcher.FeedHints(*feed)
+		feed.Ordering = fs.Ordering
 	}
 	return fm.store.Save(ctx, feed)
 }
