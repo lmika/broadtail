@@ -1,7 +1,7 @@
 <div>
     <h3>Video: {{.video.Title}}</h3>
 
-    <div class="fields">
+    <div class="fields padded">
         <img class="thumbnail" src="{{.video.ThumbnailURL}}">
         <div class="pre-wrap">{{.video.Description}}</div>
     </div>
@@ -9,7 +9,7 @@
         <div class="field">
             <div class="field-name">Video ID</div>
             <div class="field-value">
-                <a href="https://www.youtube.com/watch?v={{.video.VideoRef.ID}}">{{.video.VideoRef.ID}}</a>
+                <a href="{{.videoURL}}">{{.video.VideoRef.ID}}</a>
             </div>
         </div>
         {{if .video.ChannelID}}
@@ -26,7 +26,7 @@
         {{end}}
         <div class="field">
             <div class="field-name">Uploaded On</div>
-            <div class="field-value">{{formatTime .video.UploadedOn}}</div>
+            <div class="field-value">{{formatUploadTime .video.UploadedOn}}</div>
         </div>
         <div class="field">
             <div class="field-name">Duration</div>

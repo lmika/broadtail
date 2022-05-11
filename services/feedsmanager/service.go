@@ -28,7 +28,7 @@ type FeedsManager struct {
 func New(
 	store FeedStore,
 	feedProvider FeedItemStore,
-	// rssFeedSource RSSFetcher,
+// rssFeedSource RSSFetcher,
 	feedFetcher FeedFetcher,
 	favouriteService *favourites.Service,
 	rulesStore RulesStore,
@@ -99,6 +99,10 @@ func (fm *FeedsManager) UpdateAllFeeds(ctx context.Context) error {
 	}
 
 	for _, feed := range allFeeds {
+		if !feed.CheckForUpdates {
+			continue
+		}
+
 		if err := fm.updateFeedItems(ctx, feed, rules); err != nil {
 			log.Printf("unable to update feed: %v", err)
 		}

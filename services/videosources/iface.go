@@ -11,6 +11,8 @@ type SourceProvider interface {
 	// GetVideoMetadata returns the metadata details for a sourceID.
 	GetVideoMetadata(ctx context.Context, videoRef models.VideoRef) (*models.Video, error)
 
+	GetVideoURL(videoRef models.VideoRef) string
+
 	// DownloadVideo will download the video.
 	DownloadVideo(ctx context.Context, videoRef models.VideoRef, options models.DownloadOptions, logline func(line string)) (outputFilename string, err error)
 }

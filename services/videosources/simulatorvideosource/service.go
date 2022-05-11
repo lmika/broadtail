@@ -3,6 +3,7 @@ package simulatorvideosource
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/lmika/broadtail/models"
@@ -34,4 +35,8 @@ func (Service) DownloadVideo(ctx context.Context, videoRef models.VideoRef, opti
 		time.Sleep(1 * time.Second)
 	}
 	return "", nil
+}
+
+func (s Service) GetVideoURL(videoRef models.VideoRef) string {
+	return fmt.Sprintf("https://www.youtube.com/watch?v=%s", url.QueryEscape(videoRef.ID))
 }

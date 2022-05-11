@@ -6,6 +6,11 @@ div.fields {
     overflow: auto;     /* clearfix */
 }
 
+div.fields.padded {
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
 div.fields hr {
     border-top: dotted thin var(--border-color);
     border-bottom: 0;

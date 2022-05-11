@@ -55,6 +55,8 @@ func (dh *detailsHandler) VideoDetails() http.Handler {
 			return errhandler.Wrap(err, http.StatusInternalServerError)
 		}
 
+		videoURL := videoSource.GetVideoURL(videoRef)
+
 		var downloadStatusStr string
 		downloadStatus, err := dh.videoManager.DownloadStatus(videoRef)
 		if err != nil {
@@ -75,6 +77,7 @@ func (dh *detailsHandler) VideoDetails() http.Handler {
 		}
 
 		render.Set(r, "video", video)
+		render.Set(r, "videoURL", videoURL)
 		render.Set(r, "downloadStatus", downloadStatusStr)
 		render.Set(r, "favouriteStatus", favouriteStatus)
 		if fromFeedID := r.FormValue("from_feed_id"); fromFeedID != "" {

@@ -36,11 +36,6 @@ func ParseVideoRef(str string) (VideoRef, error) {
 		return VideoRef{}, errors.Errorf("invalid manual ref: ")
 	}
 
-	// TODO:
-	if refId[0] != YoutubeVideoRefSource {
-		return VideoRef{}, errors.Errorf("unrecognised source")
-	}
-
 	return VideoRef{Source: VideoRefSource(refId[0]), ID: refId[1]}, nil
 }
 

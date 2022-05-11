@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/lmika/broadtail/services/feedfetchers/appledevvideos"
+	"github.com/lmika/broadtail/services/videosources/appledevvideosource"
 	"html"
 	"html/template"
 	"io/fs"
@@ -115,7 +116,8 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	}
 
 	videoSourcesServices := videosources.NewService(map[models.VideoRefSource]videosources.SourceProvider{
-		models.YoutubeVideoRefSource: youtubedlProvider,
+		models.YoutubeVideoRefSource:  youtubedlProvider,
+		models.AppleDevVideoRefSource: appledevvideosource.NewService(),
 	})
 
 	plexProvider := plexprovider.New(config.PlexBaseURL, config.PlexToken)
@@ -201,7 +203,19 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 				}
 				return t.Format("2006-01-02 15:04:05 MST")
 			},
+			"formatUploadTime": func(t time.Time) string {
+				if t.IsZero() {
+					return "unknown"
+				}
+				if dur := time.Since(t); dur < time.Duration(5*24)*time.Hour {
+					return timediff.TimeDiff(t)
+				}
+				return t.Format("2006-01-02 15:04:05 MST")
+			},
 			"formatDurationSec": func(durationInSecs int) string {
+				if durationInSecs == 0 {
+					return "unknown"
+				}
 				hrs := durationInSecs / 3600
 				mins := (durationInSecs / 60) % 60
 				secs := durationInSecs % 60

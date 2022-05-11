@@ -1,30 +1,34 @@
-package youtubevideosource
+package appledevvideosource
 
 import (
 	"context"
 	"fmt"
 	"github.com/lmika/broadtail/models"
 	"net/url"
+	"strings"
 )
 
 type Service struct {
-	provider DownloadProvider
 }
 
-func NewService(provider DownloadProvider) *Service {
-	return &Service{
-		provider: provider,
-	}
+func NewService() *Service {
+	return &Service{}
 }
 
 func (s *Service) GetVideoMetadata(ctx context.Context, videoRef models.VideoRef) (*models.Video, error) {
-	return s.provider.GetVideoMetadata(ctx, videoRef.ID)
+	return &models.Video{
+		VideoRef:    videoRef,
+		Title:       "Some title from apple",
+		Description: "Some description from apple",
+		Duration:    0,
+	}, nil
 }
 
 func (s *Service) DownloadVideo(ctx context.Context, videoRef models.VideoRef, options models.DownloadOptions, logline func(line string)) (outputFilename string, err error) {
-	return s.provider.DownloadVideo(ctx, videoRef.ID, options, logline)
+	panic("implement me")
 }
 
 func (s *Service) GetVideoURL(videoRef models.VideoRef) string {
-	return fmt.Sprintf("https://www.youtube.com/watch?v=%s", url.QueryEscape(videoRef.ID))
+	videoSet, video, _ := strings.Cut(videoRef.ID, ".")
+	return fmt.Sprintf("https://developer.apple.com/videos/play/%s/%s/", url.PathEscape(videoSet), url.PathEscape(video))
 }
