@@ -3,13 +3,17 @@ package handlers
 import (
 	"context"
 	"fmt"
-	"github.com/lmika/broadtail/providers/youtubedl"
-	"github.com/lmika/broadtail/services/videosources/youtubevideosource"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/lmika/broadtail/models"
+	"github.com/lmika/broadtail/providers/youtubedl"
+	"github.com/lmika/broadtail/services/feedfetchers"
+	"github.com/lmika/broadtail/services/feedfetchers/youtuberss"
+	"github.com/lmika/broadtail/services/videosources/youtubevideosource"
 
 	"github.com/lmika/broadtail/handlers/monitor"
 	"github.com/lmika/broadtail/handlers/settings"
@@ -29,7 +33,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/lmika/broadtail/middleware/jobdispatcher"
-	"github.com/lmika/broadtail/middleware/rssfetcher"
 	"github.com/lmika/broadtail/middleware/ujs"
 	"github.com/lmika/broadtail/providers/jobs"
 	"github.com/lmika/broadtail/providers/stormstore"
@@ -89,7 +92,11 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 		return nil, nil, errors.Wrap(err, "cannot open rules store")
 	}
 
-	rssFetcher := rssfetcher.New()
+	youtubeRssFetcher := youtuberss.New()
+	feedFetcher := feedfetchers.NewService(map[string]feedfetchers.FeedDriver{
+		models.FeedTypeYoutubeChannel:  youtubeRssFetcher,
+		models.FeedTypeYoutubePlaylist: youtubeRssFetcher,
+	})
 
 	var videoSourcesServices *videosources.Service
 
@@ -132,7 +139,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	//	VideoStore:          videoStore,
 	//	VideoDownloadHooks:  plexProvider,
 	//})
-	feedsManager := feedsmanager.New(feedsStore, feedItemStore, rssFetcher, favouriteService, rulesStore, vidDownloadService)
+	feedsManager := feedsmanager.New(feedsStore, feedItemStore, feedFetcher, favouriteService, rulesStore, vidDownloadService)
 	videoManager := videomanager.New(config.LibraryDir, videoStore)
 	rulesService := rules.NewService(rulesStore, feedsStore)
 

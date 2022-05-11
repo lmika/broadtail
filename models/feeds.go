@@ -44,3 +44,12 @@ type RecentFeedItem struct {
 	Feed        Feed
 	FavouriteID string
 }
+
+// FetchedFeedItem is a feed item fetched from a RSS source
+type FetchedFeedItem struct {
+	VideoRef    VideoRef
+	Title       string
+	Description string
+	Link        string
+	Published   time.Time
+}

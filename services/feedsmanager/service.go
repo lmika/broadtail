@@ -2,7 +2,6 @@ package feedsmanager
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -11,14 +10,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lmika/broadtail/models"
-	"github.com/lmika/broadtail/models/ytrss"
 	"github.com/pkg/errors"
 )
 
 type FeedsManager struct {
-	store            FeedStore
-	feedItemStore    FeedItemStore
-	rssFeedSource    RSSFetcher
+	store         FeedStore
+	feedItemStore FeedItemStore
+	// rssFeedSource    RSSFetcher
+	feedFetcher      FeedFetcher
 	favouriteService *favourites.Service
 	rulesStore       RulesStore
 	videoDownloader  VideoDownloader
@@ -29,7 +28,8 @@ type FeedsManager struct {
 func New(
 	store FeedStore,
 	feedProvider FeedItemStore,
-	rssFeedSource RSSFetcher,
+	// rssFeedSource RSSFetcher,
+	feedFetcher FeedFetcher,
 	favouriteService *favourites.Service,
 	rulesStore RulesStore,
 	videoDownloader VideoDownloader,
@@ -37,7 +37,7 @@ func New(
 	return &FeedsManager{
 		store:            store,
 		feedItemStore:    feedProvider,
-		rssFeedSource:    rssFeedSource,
+		feedFetcher:      feedFetcher,
 		rulesStore:       rulesStore,
 		favouriteService: favouriteService,
 		videoDownloader:  videoDownloader,
@@ -54,13 +54,16 @@ func (fm *FeedsManager) Get(ctx context.Context, id uuid.UUID) (models.Feed, err
 }
 
 func (fm *FeedsManager) FeedExternalURL(f models.Feed) (string, error) {
-	switch f.Type {
-	case models.FeedTypeYoutubeChannel:
-		return fmt.Sprintf("https://www.youtube.com/channel/%v", f.ExtID), nil
-	case models.FeedTypeYoutubePlaylist:
-		return fmt.Sprintf("https://www.youtube.com/playlist/%v", f.ExtID), nil
-	}
-	return "", errors.Errorf("external url unsupported for feed type: %v", f.Type)
+	/*
+		switch f.Type {
+		case models.FeedTypeYoutubeChannel:
+			return fmt.Sprintf("https://www.youtube.com/channel/%v", f.ExtID), nil
+		case models.FeedTypeYoutubePlaylist:
+			return fmt.Sprintf("https://www.youtube.com/playlist/%v", f.ExtID), nil
+		}
+		return "", errors.Errorf("external url unsupported for feed type: %v", f.Type)
+	*/
+	return fm.feedFetcher.FeedExternalURL(f)
 }
 
 func (fm *FeedsManager) Save(ctx context.Context, feed *models.Feed) error {
@@ -113,7 +116,7 @@ func (fm *FeedsManager) updateFeedItems(ctx context.Context, feed models.Feed, r
 	fm.feedUpdateMutex.Lock()
 	defer fm.feedUpdateMutex.Unlock()
 
-	rssItems, err := fm.rssFeedSource.GetForFeed(ctx, feed)
+	rssItems, err := fm.feedFetcher.GetForFeed(ctx, feed)
 	if err != nil {
 		return errors.Wrapf(err, "cannot get feed items from source")
 	}
@@ -142,11 +145,17 @@ func (fm *FeedsManager) updateFeedItems(ctx context.Context, feed models.Feed, r
 	return nil
 }
 
-func (fm *FeedsManager) runRulesForFeedItem(ctx context.Context, feed *models.Feed, feedItem *models.FeedItem, rssEntry ytrss.Entry, rules []*models.Rule) error {
+func (fm *FeedsManager) runRulesForFeedItem(
+	ctx context.Context,
+	feed *models.Feed,
+	feedItem *models.FeedItem,
+	fetchedFeedItem models.FetchedFeedItem,
+	rules []*models.Rule,
+) error {
 	ruleTarget := models.RuleTarget{
 		FeedID:      feedItem.FeedID,
 		Title:       feedItem.Title,
-		Description: rssEntry.Media.Description,
+		Description: fetchedFeedItem.Description,
 	}
 
 	// Get all matching rules
@@ -190,19 +199,14 @@ func (fm *FeedsManager) runRulesForFeedItem(ctx context.Context, feed *models.Fe
 	return nil
 }
 
-func (fm *FeedsManager) sourceEntryToFeedItem(feed *models.Feed, entry ytrss.Entry) models.FeedItem {
-	// XXX - deal with different video ref
-	fi := models.FeedItem{
-		VideoRef: models.VideoRef{
-			Source: models.YoutubeVideoRefSource,
-			ID:     entry.VideoID,
-		},
+func (fm *FeedsManager) sourceEntryToFeedItem(feed *models.Feed, entry models.FetchedFeedItem) models.FeedItem {
+	return models.FeedItem{
+		VideoRef:  entry.VideoRef,
 		FeedID:    feed.ID,
 		Title:     entry.Title,
 		Link:      entry.Link,
 		Published: entry.Published,
 	}
-	return fi
 }
 
 func (fm *FeedsManager) RecentFeedItems(ctx context.Context, feed *models.Feed, filterExpression models.FeedItemFilter, page int) ([]models.RecentFeedItem, error) {
