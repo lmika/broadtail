@@ -43,6 +43,27 @@ func TestBind(t *testing.T) {
 		assert.Equal(t, "Flimflam", s.Bar)
 	})
 
+	t.Run("primitive types should bind to the last value", func(t *testing.T) {
+		formParams := make(url.Values)
+		formParams.Set("baz", "Bladibla")
+		formParams.Add("baz", "Really use this one")
+		formParams.Set("checkbox", "off")
+		formParams.Add("checkbox", "on")
+
+		req := httptest.NewRequest("POST", "https://www.example.com/", strings.NewReader(formParams.Encode()))
+		req.Header.Set("Content-type", "application/x-www-form-urlencoded")
+
+		s := struct {
+			Foo string `req:"baz"`
+			Bar bool   `req:"checkbox"`
+		}{}
+
+		err := reqbind.Bind(&s, req)
+		assert.NoError(t, err, nil)
+		assert.Equal(t, "Really use this one", s.Foo)
+		assert.True(t, s.Bar)
+	})
+
 	t.Run("should bind to ints", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "https://www.example.com/?foo=123&bar=-456", nil)
 		s := struct {

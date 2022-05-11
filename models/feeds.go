@@ -14,14 +14,15 @@ const (
 )
 
 type Feed struct {
-	ID            uuid.UUID        `storm:"id"`
-	Name          string           `req:"name"`
-	Type          string           `req:"type"`
-	ExtID         string           `req:"ext_id"`
-	TargetDir     string           `req:"target_dir"`
-	Ordering      FeedItemOrdering `req:"ordering"`
-	CreatedAt     time.Time
-	LastUpdatedAt time.Time
+	ID              uuid.UUID `storm:"id"`
+	Name            string    `req:"name"`
+	Type            string    `req:"type"`
+	ExtID           string    `req:"ext_id"`
+	TargetDir       string    `req:"target_dir"`
+	Ordering        string    `req:"ordering"`
+	CheckForUpdates bool      `req:"check_for_updates"`
+	CreatedAt       time.Time
+	LastUpdatedAt   time.Time
 }
 
 func (f Feed) Validate() error {
@@ -33,13 +34,12 @@ func (f Feed) Validate() error {
 	)
 }
 
-type FeedItemOrdering int
-
 const (
-	ChronologicalFeedItemOrdering FeedItemOrdering = 0
-	AlphabeticalFeedItemOrdering                   = 1
+	ChronologicalFeedItemOrdering = "pub-desc"
+	AlphabeticalFeedItemOrdering  = "title-asc"
 )
 
 type FeedHints struct {
-	Ordering FeedItemOrdering
+	Ordering        string
+	CheckForUpdates bool
 }

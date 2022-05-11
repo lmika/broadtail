@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/lmika/broadtail/services/feedfetchers/appledevvideos"
+	"html"
 	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/lmika/broadtail/models"
@@ -207,6 +209,30 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 					return fmt.Sprintf("%d:%02d:%02d", hrs, mins, secs)
 				}
 				return fmt.Sprintf("%d:%02d", mins, secs)
+			},
+			"selectOption": func(value, optionValue any, name string) template.HTML {
+				escapedValue := html.EscapeString(fmt.Sprint(optionValue))
+				escapedName := html.EscapeString(fmt.Sprint(name))
+				if reflect.DeepEqual(value, optionValue) {
+					return template.HTML(fmt.Sprintf(`<option value="%s" selected>%s</option>`, escapedValue, escapedName))
+				}
+
+				return template.HTML(fmt.Sprintf(`<option value="%s">%s</option>`, escapedValue, escapedName))
+			},
+			"checkbox": func(value bool, name string, label string) template.HTML {
+				escapedName := html.EscapeString(name)
+				escapedLabel := html.EscapeString(label)
+				checkAttr := ""
+				if value {
+					checkAttr = "checked"
+				}
+
+				return template.HTML(fmt.Sprintf(`
+					<input name="%s" type="hidden" value="off">
+                	<label>
+                    	<input name="%s" type="checkbox" value="on" %s> %s
+                	</label>
+				`, escapedName, escapedName, checkAttr, escapedLabel))
 			},
 		}),
 		render.WithFrame("frames/main.html"),

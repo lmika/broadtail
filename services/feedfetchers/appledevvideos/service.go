@@ -67,6 +67,7 @@ func (s *Service) FeedExternalURL(feed models.Feed) (string, error) {
 
 func (fm *Service) FeedHints(feed models.Feed) models.FeedHints {
 	return models.FeedHints{
-		Ordering: models.AlphabeticalFeedItemOrdering,
+		Ordering:        models.AlphabeticalFeedItemOrdering,
+		CheckForUpdates: false,
 	}
 }

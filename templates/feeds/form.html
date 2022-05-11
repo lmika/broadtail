@@ -7,9 +7,9 @@
         <div class="field-name"><label>Type</label></div>
         <div class="field-value">
             <select name="type">
-                <option value="youtube-channel">YouTube Channel</option>
-                <option value="youtube-playlist">YouTube Playlist</option>
-                <option value="apple-dev">Apple Developer Videos</option>
+                {{selectOption .feed.Type "youtube-channel" "YouTube Channel"}}
+                {{selectOption .feed.Type "youtube-playlist" "YouTube Playlist"}}
+                {{selectOption .feed.Type "apple-dev" "Apple Developer Videos"}}
             </select>
         </div>
     </div>
@@ -22,13 +22,20 @@
         <div class="field-value"><input name="target_dir" value="{{.feed.TargetDir}}" class="large-text-field"></div>
     </div>
     {{if .extendedForm}}
+        <hr>
         <div class="field">
             <div class="field-name"><label>Ordering</label></div>
             <div class="field-value">
                 <select name="ordering">
-                    <option value="0">Published</option>
-                    <option value="1">Title</option>
+                    {{selectOption .feed.Ordering "pub-desc" "Published"}}
+                    {{selectOption .feed.Ordering "title-asc" "Title"}}
                 </select>
+            </div>
+        </div>
+        <div class="field">
+            <div class="field-name"></div>
+            <div class="field-value">
+                {{checkbox .feed.CheckForUpdates "check_for_updates" "Check for Updates"}}
             </div>
         </div>
     {{end}}

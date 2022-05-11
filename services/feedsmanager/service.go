@@ -64,6 +64,7 @@ func (fm *FeedsManager) Save(ctx context.Context, feed *models.Feed) error {
 
 		fs := fm.feedFetcher.FeedHints(*feed)
 		feed.Ordering = fs.Ordering
+		feed.CheckForUpdates = fs.CheckForUpdates
 	}
 	return fm.store.Save(ctx, feed)
 }

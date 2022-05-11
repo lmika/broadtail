@@ -39,7 +39,8 @@ func (fm *Provider) FeedExternalURL(f models.Feed) (string, error) {
 
 func (fm *Provider) FeedHints(feed models.Feed) models.FeedHints {
 	return models.FeedHints{
-		Ordering: models.ChronologicalFeedItemOrdering,
+		Ordering:        models.ChronologicalFeedItemOrdering,
+		CheckForUpdates: true,
 	}
 }
 

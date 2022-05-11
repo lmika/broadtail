@@ -2,9 +2,15 @@ div.fields {
     border-top: dotted thin var(--border-color);
     border-bottom: dotted thin var(--border-color);
 
-    padding: 4px 10px;
+    padding: 4px 0px;
     overflow: auto;     /* clearfix */
 }
+
+div.fields hr {
+    border-top: dotted thin var(--border-color);
+    border-bottom: 0;
+}
+
 
 img.thumbnail {
     float: right;
