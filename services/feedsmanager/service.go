@@ -14,9 +14,8 @@ import (
 )
 
 type FeedsManager struct {
-	store         FeedStore
-	feedItemStore FeedItemStore
-	// rssFeedSource    RSSFetcher
+	store            FeedStore
+	feedItemStore    FeedItemStore
 	feedFetcher      FeedFetcher
 	favouriteService *favourites.Service
 	rulesStore       RulesStore
@@ -29,7 +28,6 @@ type FeedsManager struct {
 func New(
 	store FeedStore,
 	feedProvider FeedItemStore,
-	// rssFeedSource RSSFetcher,
 	feedFetcher FeedFetcher,
 	favouriteService *favourites.Service,
 	rulesStore RulesStore,

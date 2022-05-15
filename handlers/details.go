@@ -15,7 +15,6 @@ import (
 )
 
 type detailsHandler struct {
-	// ytdownloadService *ytdownload.Service
 	videoSources     *videosources.Service
 	videoManager     *videomanager.VideoManager
 	favouriteService *favourites.Service

@@ -29,7 +29,6 @@ func (vm *VideoManager) Get(id uuid.UUID) (*models.SavedVideo, error) {
 	return vm.videoStore.FindWithID(id)
 }
 
-//func (vm *VideoManager) DownloadStatus(extId string) (models.DownloadStatus, error) {
 func (vm *VideoManager) DownloadStatus(videoRef models.VideoRef) (models.DownloadStatus, error) {
 	video, err := vm.videoStore.FindWithExtID(videoRef)
 	if err != nil {
