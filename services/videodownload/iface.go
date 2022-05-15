@@ -8,7 +8,7 @@ import (
 
 type DownloadProvider interface {
 	GetVideoMetadata(ctx context.Context, videoRef models.VideoRef) (*models.Video, error)
-	DownloadVideo(ctx context.Context, videoRef models.VideoRef, options models.DownloadOptions, logline func(line string)) (outputFilename string, err error)
+	DownloadVideo(ctx context.Context, videoRef models.VideoRef, options models.DownloadOptions, logline func(logMessage models.LogMessage)) (outputFilename string, err error)
 }
 
 type FeedStore interface {

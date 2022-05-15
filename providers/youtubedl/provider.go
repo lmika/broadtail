@@ -61,7 +61,7 @@ func (p *Provider) GetVideoMetadata(ctx context.Context, youtubeId string) (*mod
 
 // "python3", "/usr/local/bin/youtube-dl"
 
-func (p *Provider) DownloadVideo(ctx context.Context, youtubeId string, options models.DownloadOptions, logline func(line string)) (string, error) {
+func (p *Provider) DownloadVideo(ctx context.Context, youtubeId string, options models.DownloadOptions, logline func(logMessage models.LogMessage)) (string, error) {
 	const filenameFormat = "%(title)s.%(id)s.%(ext)s"
 
 	// Get the expected filename
@@ -74,7 +74,7 @@ func (p *Provider) DownloadVideo(ctx context.Context, youtubeId string, options 
 	}
 	outFilename := strings.TrimSpace(string(out))
 
-	logline("Target dir: " + options.TargetDir)
+	logline(models.LogMessage{Message: "Target dir: " + options.TargetDir})
 	cmd := p.buildYoutubeDLCommand(ctx, "-o", filenameFormat, "--restrict-filenames",
 		"--newline", "-f", "mp4[height<=720]", downloadUrl)
 	cmd.Dir = options.TargetDir
@@ -91,7 +91,18 @@ func (p *Provider) DownloadVideo(ctx context.Context, youtubeId string, options 
 	}
 
 	for pipeScanner.Scan() {
-		logline(pipeScanner.Text())
+		line := pipeScanner.Text()
+		if prog, ok := parseProgress(line); ok {
+			logline(models.LogMessage{
+				Message:  line,
+				Permille: int(prog.Percent * 10.0),
+				ETA:      prog.ETA,
+			})
+		} else {
+			logline(models.LogMessage{
+				Message: line,
+			})
+		}
 	}
 
 	if err := cmd.Wait(); err != nil {

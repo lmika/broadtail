@@ -82,14 +82,25 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 		var err error
 		outputFilename, err = y.VideoSource.DownloadVideo(ctx, y.VideoRef, models.DownloadOptions{
 			TargetDir: fullTargetDir,
-		}, func(line string) {
-			if prog, ok := parseProgress(line); ok {
-				runContext.PostUpdate(jobs.Update{
-					Percent: prog.Percent,
-					Summary: fmt.Sprintf("%.1f%% - ETA %v", prog.Percent, prog.ETA),
-				})
+		}, func(logMessage models.LogMessage) {
+			if logMessage.Permille >= 0 {
+				percent := float64(logMessage.Permille) / 10.0
+				etaStr := formatETA(logMessage.ETA)
+				if etaStr != "" {
+					runContext.PostUpdate(jobs.Update{
+						Percent: percent,
+						Summary: fmt.Sprintf("%.1f%% - %v", percent, etaStr),
+					})
+				} else {
+					runContext.PostUpdate(jobs.Update{
+						Percent: percent,
+						Summary: fmt.Sprintf("%.1f%%", percent),
+					})
+				}
 			}
-			runContext.PostMessage(line)
+			if logMessage.Message != "" {
+				runContext.PostMessage(logMessage.Message)
+			}
 		})
 		if err != nil {
 			// Check that the context hasn't been cancelled
@@ -201,4 +212,18 @@ func summariseTitle(t string, maxLen int) string {
 	}
 
 	return t
+}
+
+func formatETA(eta time.Duration) string {
+	if eta <= 0 {
+		return ""
+	}
+
+	hr := int(eta.Hours())
+	min := int(eta.Minutes()) % 60
+	sec := int(eta.Seconds()) % 60
+	if hr > 0 {
+		return fmt.Sprintf("ETA %d:%02d:%02d", hr, min, sec)
+	}
+	return fmt.Sprintf("ETA %d:%02d", min, sec)
 }

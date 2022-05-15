@@ -29,9 +29,9 @@ func (Service) GetVideoMetadata(ctx context.Context, videoRef models.VideoRef) (
 }
 
 // BuildDownloadTask returns a new task that will download the video.
-func (Service) DownloadVideo(ctx context.Context, videoRef models.VideoRef, options models.DownloadOptions, logline func(line string)) (outputFilename string, err error) {
+func (Service) DownloadVideo(ctx context.Context, videoRef models.VideoRef, options models.DownloadOptions, logline func(line models.LogMessage)) (outputFilename string, err error) {
 	for i := 1; i <= 100; i++ {
-		logline(fmt.Sprintf("[download] %d.0%% of 269.30MiB at 45.79KiB/s ETA 00:00", i))
+		logline(models.LogMessage{Message: fmt.Sprintf("[download] %d.0%% of 269.30MiB at 45.79KiB/s ETA 00:00", i)})
 		time.Sleep(1 * time.Second)
 	}
 	return "", nil

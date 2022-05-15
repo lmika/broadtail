@@ -34,3 +34,9 @@ type JobUpdate struct {
 	Summary string
 	Percent float64
 }
+
+type LogMessage struct {
+	Message  string
+	Permille int           // Download in per-mille (or -1 if none)
+	ETA      time.Duration // ETA (or -1 if not availabe)
+}

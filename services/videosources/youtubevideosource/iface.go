@@ -7,5 +7,5 @@ import (
 
 type DownloadProvider interface {
 	GetVideoMetadata(ctx context.Context, youtubeId string) (*models.Video, error)
-	DownloadVideo(ctx context.Context, youtubeId string, options models.DownloadOptions, logline func(line string)) (outputFilename string, err error)
+	DownloadVideo(ctx context.Context, youtubeId string, options models.DownloadOptions, logline func(line models.LogMessage)) (outputFilename string, err error)
 }
