@@ -70,6 +70,9 @@ func (s *Service) describeRule(ctx context.Context, rule *models.Rule) string {
 	if rule.Action.MarkFavourite {
 		actionDescription = append(actionDescription, "mark as favourite")
 	}
+	if rule.Action.MarkDownloaded {
+		actionDescription = append(actionDescription, "mark as downloaded")
+	}
 
 	fullDescription := strings.Builder{}
 	if len(conditionDescription) > 0 {

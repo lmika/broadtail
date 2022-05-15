@@ -8,7 +8,6 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/lmika/broadtail/models"
 	"github.com/pkg/errors"
-	"log"
 	"strings"
 )
 
@@ -48,7 +47,6 @@ func (s *Service) GetForFeed(ctx context.Context, feed models.Feed) ([]models.Fe
 			return
 		}
 
-		log.Println(refId)
 		fetchedFeedItem = append(fetchedFeedItem, models.FetchedFeedItem{
 			VideoRef: models.VideoRef{
 				Source: models.AppleDevVideoRefSource,

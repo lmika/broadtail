@@ -6,12 +6,13 @@ import (
 )
 
 type FeedItem struct {
-	ID        uuid.UUID `storm:"id"`
-	VideoRef  VideoRef  `storm:"unique"`
-	FeedID    uuid.UUID `storm:"index"`
-	Title     string
-	Link      string
-	Published time.Time
+	ID                 uuid.UUID `storm:"id"`
+	VideoRef           VideoRef  `storm:"unique"`
+	FeedID             uuid.UUID `storm:"index"`
+	Title              string
+	Link               string
+	MarkedAsDownloaded bool
+	Published          time.Time
 }
 
 type RecentFeedItem struct {

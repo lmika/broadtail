@@ -197,6 +197,12 @@ func (fm *FeedsManager) runRulesForFeedItem(
 			log.Printf("warn: unable to add feed item %v as favourite: %v", feedItem.ID, err)
 		}
 	}
+	if combinedAction.MarkDownloaded {
+		feedItem.MarkedAsDownloaded = true
+		if err := fm.feedItemStore.Save(ctx, feedItem); err != nil {
+			log.Printf("warn: unable to update feed item %v to mark as downloaded: %v", feedItem.ID, err)
+		}
+	}
 
 	return nil
 }
@@ -219,7 +225,7 @@ func (fm *FeedsManager) RecentFeedItems(ctx context.Context, feed *models.Feed, 
 
 	recentFeedItems := make([]models.RecentFeedItem, 0)
 	for _, fi := range feedItems {
-		var wasDownloaded bool
+		var wasDownloaded = fi.MarkedAsDownloaded
 		if vs, err := fm.videoStore.FindWithExtID(fi.VideoRef); err == nil && vs != nil {
 			wasDownloaded = true
 		}
@@ -248,7 +254,7 @@ func (fm *FeedsManager) RecentFeedItemsFromAllFeeds(ctx context.Context, filterE
 			log.Printf("warn: cannot get feed with id: %v", err)
 		}
 
-		var wasDownloaded bool
+		var wasDownloaded = fi.MarkedAsDownloaded
 		if vs, err := fm.videoStore.FindWithExtID(fi.VideoRef); err == nil && vs != nil {
 			wasDownloaded = true
 		}
