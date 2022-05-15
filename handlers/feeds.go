@@ -188,6 +188,7 @@ func (h *feedsHandler) ShowAllRecentItems() http.Handler {
 		}
 
 		feedItemFilter := models.ParseFeedItemFilter(request.Query)
+		feedItemFilter.Ordering = models.ChronologicalFeedItemOrdering
 
 		recentItems, err := h.feedsManager.RecentFeedItemsFromAllFeeds(ctx, feedItemFilter, request.Page, 50)
 		if err != nil {

@@ -24,7 +24,9 @@ type indexHandlers struct {
 
 func (ih *indexHandlers) Index() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		recentFeedItems, err := ih.feedsManager.RecentFeedItemsFromAllFeeds(r.Context(), models.FeedItemFilter{}, 0, 10)
+		recentFeedItems, err := ih.feedsManager.RecentFeedItemsFromAllFeeds(r.Context(), models.FeedItemFilter{
+			Ordering: models.ChronologicalFeedItemOrdering,
+		}, 0, 10)
 		if err != nil {
 			log.Printf("warn: cannot get list of recent feed items: %v", err)
 		}
