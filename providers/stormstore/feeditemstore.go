@@ -25,7 +25,7 @@ func NewFeedItemStore(filename string) (*FeedItemStore, error) {
 }
 
 func (f *FeedItemStore) PutIfAbsent(ctx context.Context, item *models.FeedItem) (wasInserted bool, err error) {
-	if err := f.db.Select(q.Eq("EntryID", item.EntryID)).First(&models.FeedItem{}); err != nil {
+	if err := f.db.Select(q.Eq("VideoRef", item.VideoRef)).First(&models.FeedItem{}); err != nil {
 		if !errors.Is(err, storm.ErrNotFound) {
 			return false, err
 		}
@@ -43,13 +43,29 @@ func (f *FeedItemStore) PutIfAbsent(ctx context.Context, item *models.FeedItem) 
 	return true, nil
 }
 
+func (f *FeedItemStore) GetByVideoRef(ctx context.Context, videoRef models.VideoRef) (*models.FeedItem, error) {
+	var fi models.FeedItem
+	if err := f.db.One("VideoRef", videoRef, &fi); err != nil {
+		return nil, err
+	}
+	return &fi, nil
+}
+
 func (f *FeedItemStore) ListRecentsFromAllFeeds(ctx context.Context, filterExpression models.FeedItemFilter, page, count int) (feedItems []models.FeedItem, err error) {
-	query := q.True()
+	matcher := q.True()
 	if len(filterExpression.ContainKeyword) > 0 {
-		query = q.And(query, q.NewFieldMatcher("Title", fieldContainsAnyCase(filterExpression.ContainKeyword)))
+		matcher = q.And(matcher, q.NewFieldMatcher("Title", fieldContainsAnyCase(filterExpression.ContainKeyword)))
+	}
+	query := f.db.Select(matcher)
+
+	switch filterExpression.Ordering {
+	case models.ChronologicalFeedItemOrdering:
+		query = query.OrderBy("Published").Reverse()
+	case models.AlphabeticalFeedItemOrdering:
+		query = query.OrderBy("Title")
 	}
 
-	err = f.db.Select(query).OrderBy("Published").Reverse().Skip(page * count).Limit(count).Find(&feedItems)
+	err = query.Skip(page * count).Limit(count).Find(&feedItems)
 	if err == storm.ErrNotFound {
 		return []models.FeedItem{}, nil
 	}
@@ -57,12 +73,20 @@ func (f *FeedItemStore) ListRecentsFromAllFeeds(ctx context.Context, filterExpre
 }
 
 func (f *FeedItemStore) ListRecent(ctx context.Context, feedID uuid.UUID, filterExpression models.FeedItemFilter, page int) (feedItems []models.FeedItem, err error) {
-	query := q.Eq("FeedID", feedID)
+	matcher := q.Eq("FeedID", feedID)
 	if len(filterExpression.ContainKeyword) > 0 {
-		query = q.And(query, q.NewFieldMatcher("Title", fieldContainsAnyCase(filterExpression.ContainKeyword)))
+		matcher = q.And(matcher, q.NewFieldMatcher("Title", fieldContainsAnyCase(filterExpression.ContainKeyword)))
+	}
+	query := f.db.Select(matcher)
+
+	switch filterExpression.Ordering {
+	case models.ChronologicalFeedItemOrdering:
+		query = query.OrderBy("Published").Reverse()
+	case models.AlphabeticalFeedItemOrdering:
+		query = query.OrderBy("Title")
 	}
 
-	err = f.db.Select(query).OrderBy("Published").Reverse().Skip(page * 50).Limit(50).Find(&feedItems)
+	err = query.Skip(page * 50).Limit(50).Find(&feedItems)
 	if err == storm.ErrNotFound {
 		return []models.FeedItem{}, nil
 	}

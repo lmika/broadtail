@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/lmika/broadtail/models"
-	"github.com/lmika/broadtail/models/ytrss"
 )
 
 type FeedStore interface {
@@ -23,8 +22,10 @@ type FeedItemStore interface {
 	PutIfAbsent(ctx context.Context, item *models.FeedItem) (wasInserted bool, err error)
 }
 
-type RSSFetcher interface {
-	GetForFeed(ctx context.Context, feed models.Feed) ([]ytrss.Entry, error)
+type FeedFetcher interface {
+	GetForFeed(ctx context.Context, feed models.Feed) ([]models.FetchedFeedItem, error)
+	FeedExternalURL(feed models.Feed) (string, error)
+	FeedHints(feed models.Feed) models.FeedHints
 }
 
 type RulesStore interface {
@@ -32,5 +33,9 @@ type RulesStore interface {
 }
 
 type VideoDownloader interface {
-	QueueForDownload(ctx context.Context, videoRef models.VideoRef, feedID uuid.UUID) error
+	QueueForDownload(ctx context.Context, videoRef models.VideoRef, feed *models.Feed) error
+}
+
+type VideoStore interface {
+	FindWithExtID(videoRef models.VideoRef) (*models.SavedVideo, error)
 }

@@ -3,10 +3,11 @@ package favourites
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/lmika/broadtail/models"
 	"github.com/pkg/errors"
-	"time"
 )
 
 type Service struct {
@@ -124,15 +125,14 @@ func (s *Service) addFavourite(ctx context.Context, videoRef models.VideoRef, or
 			return nil, err
 		}
 
-		// TODO: this only supports YouTube
-		videoMetadata, err := s.videoMetadata.GetVideoMetadata(ctx, videoRef.ID)
+		videoMetadata, err := s.videoMetadata.GetVideoMetadata(ctx, videoRef)
 		if err != nil {
 			return nil, errors.Wrapf(err, "cannot get video metadata %v", videoRef.ID)
 		}
 
 		newFavourite.Origin = origin
 		newFavourite.Title = videoMetadata.Title
-		newFavourite.Link = fmt.Sprintf("https://www.youtube.com/watch?v=%v", videoMetadata.ExtID)
+		newFavourite.Link = fmt.Sprintf("https://www.youtube.com/watch?v=%v", videoMetadata.VideoRef.ID) // XXX
 		newFavourite.Published = videoMetadata.UploadedOn
 		newFavourite.VideoRef = videoRef
 	}
@@ -163,10 +163,7 @@ func (s *Service) lookupVideoRefByOrigin(ctx context.Context, origin models.Favo
 			return models.VideoRef{}, errors.Wrapf(err, "feed item with ID %v is missing", originId)
 		}
 
-		return models.VideoRef{
-			Source: models.YoutubeVideoRefSource,
-			ID:     feedItem.EntryID,
-		}, nil
+		return feedItem.VideoRef, nil
 	case models.ManualOriginType:
 		return models.VideoRef{Source: models.YoutubeVideoRefSource, ID: origin.ID}, nil
 

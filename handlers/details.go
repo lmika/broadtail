@@ -9,25 +9,25 @@ import (
 	"github.com/lmika/broadtail/models"
 	"github.com/lmika/broadtail/services/favourites"
 	"github.com/lmika/broadtail/services/videomanager"
-	"github.com/lmika/broadtail/services/ytdownload"
+	"github.com/lmika/broadtail/services/videosources"
 	"github.com/lmika/gopkgs/http/middleware/render"
 	"github.com/pkg/errors"
 )
 
 type detailsHandler struct {
-	ytdownloadService *ytdownload.Service
-	videoManager      *videomanager.VideoManager
-	favouriteService  *favourites.Service
+	videoSources     *videosources.Service
+	videoManager     *videomanager.VideoManager
+	favouriteService *favourites.Service
 }
 
 func (dh *detailsHandler) QuickLook() http.Handler {
 	return errhandler.HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-		youtubeId := r.FormValue("youtube_id")
-		if youtubeId == "" {
-			return errhandler.Errorf(http.StatusBadRequest, "missing YouTube ID")
+		videoID := r.FormValue("video_id")
+		if videoID == "" {
+			return errhandler.Errorf(http.StatusBadRequest, "missing video ID")
 		}
 
-		http.Redirect(w, r, "/details/video/"+youtubeId, http.StatusSeeOther)
+		http.Redirect(w, r, "/details/video/"+videoID, http.StatusSeeOther)
 		return nil
 	})
 }
@@ -39,23 +39,32 @@ func (dh *detailsHandler) VideoDetails() http.Handler {
 			return errhandler.Errorf(http.StatusBadRequest, "invalid video ID: %v", videoID)
 		}
 
-		video, err := dh.ytdownloadService.GetVideoMetadata(ctx, videoID)
+		videoRef, err := models.ParseVideoRef(videoID)
+		if err != nil {
+			return errhandler.Wrap(err, http.StatusBadRequest)
+		}
+
+		videoSource, err := dh.videoSources.SourceProvider(videoRef)
 		if err != nil {
 			return errhandler.Wrap(err, http.StatusInternalServerError)
 		}
 
+		video, err := videoSource.GetVideoMetadata(ctx, videoRef)
+		if err != nil {
+			return errhandler.Wrap(err, http.StatusInternalServerError)
+		}
+
+		videoURL := videoSource.GetVideoURL(videoRef)
+
 		var downloadStatusStr string
-		downloadStatus, err := dh.videoManager.DownloadStatus(models.ExtIDPrefixYoutube + videoID)
+		downloadStatus, err := dh.videoManager.DownloadStatus(videoRef)
 		if err != nil {
 			downloadStatusStr = "error: " + err.Error()
 		} else {
 			downloadStatusStr = downloadStatus.String()
 		}
 
-		favouriteStatus, err := dh.favouriteService.VideoFavourited(ctx, models.VideoRef{
-			Source: models.YoutubeVideoRefSource,
-			ID:     videoID,
-		})
+		favouriteStatus, err := dh.favouriteService.VideoFavourited(ctx, videoRef)
 		if err != nil {
 			return errors.Wrap(err, "cannot get favourite status")
 		}
@@ -67,6 +76,7 @@ func (dh *detailsHandler) VideoDetails() http.Handler {
 		}
 
 		render.Set(r, "video", video)
+		render.Set(r, "videoURL", videoURL)
 		render.Set(r, "downloadStatus", downloadStatusStr)
 		render.Set(r, "favouriteStatus", favouriteStatus)
 		if fromFeedID := r.FormValue("from_feed_id"); fromFeedID != "" {

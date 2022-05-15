@@ -1,10 +1,12 @@
 package models
 
 import (
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
+	"fmt"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
 type Favourite struct {
@@ -24,16 +26,21 @@ type VideoRef struct {
 
 func ParseVideoRef(str string) (VideoRef, error) {
 	refId := strings.SplitN(str, ":", 2)
+
+	// Dealing with old syle video references
+	if len(refId) == 1 {
+		return VideoRef{Source: YoutubeVideoRefSource, ID: refId[0]}, nil
+	}
+
 	if len(refId) != 2 {
 		return VideoRef{}, errors.Errorf("invalid manual ref: ")
 	}
 
-	// TODO:
-	if refId[0] != YoutubeVideoRefSource {
-		return VideoRef{}, errors.Errorf("unrecognised source")
-	}
+	return VideoRef{Source: VideoRefSource(refId[0]), ID: refId[1]}, nil
+}
 
-	return VideoRef{Source: YoutubeVideoRefSource, ID: refId[1]}, nil
+func (vr VideoRef) String() string {
+	return fmt.Sprintf("%v:%v", vr.Source, vr.ID)
 }
 
 type FavouriteOrigin struct {
@@ -44,7 +51,8 @@ type FavouriteOrigin struct {
 type VideoRefSource string
 
 const (
-	YoutubeVideoRefSource = "youtube"
+	YoutubeVideoRefSource  = "youtube"
+	AppleDevVideoRefSource = "apple-dev"
 )
 
 type OriginType string

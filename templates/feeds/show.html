@@ -69,8 +69,8 @@
                             <i class="fa fa-star"></i>
                         </a>
                     </td>
-                    <td><a href="/details/video/{{.FeedItem.EntryID}}?from_feed_id={{$feed.ID}}">{{.FeedItem.Title}}</a></td>
-                    <td  class="datetime">{{formatTime .FeedItem.Published}}</td>
+                    <td><a  class="{{classNameIf .Downloaded "downloaded"}}" href="/details/video/{{.FeedItem.VideoRef}}">{{.FeedItem.Title}}</a></td>
+                    <td  class="datetime">{{formatUploadTime .FeedItem.Published}}</td>
                 </tr>
             {{end}}
             </tbody>

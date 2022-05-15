@@ -20,14 +20,16 @@ type RuleWithDescription struct {
 }
 
 type RuleAction struct {
-	Download      bool `req:"download,zero"`
-	MarkFavourite bool `req:"markFavourite,zero"`
+	Download       bool `req:"download,zero"`
+	MarkFavourite  bool `req:"markFavourite,zero"`
+	MarkDownloaded bool `req:"markDownloaded,zero"`
 }
 
 func (a RuleAction) Combine(b RuleAction) RuleAction {
 	return RuleAction{
-		Download:      a.Download || b.Download,
-		MarkFavourite: a.MarkFavourite || b.MarkFavourite,
+		Download:       a.Download || b.Download,
+		MarkFavourite:  a.MarkFavourite || b.MarkFavourite,
+		MarkDownloaded: a.MarkDownloaded || b.MarkDownloaded,
 	}
 }
 

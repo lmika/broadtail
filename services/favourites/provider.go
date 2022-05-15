@@ -14,7 +14,7 @@ type FavouriteStore interface {
 }
 
 type VideoMetadata interface {
-	GetVideoMetadata(ctx context.Context, youtubeId string) (*models.Video, error)
+	GetVideoMetadata(ctx context.Context, videoRef models.VideoRef) (*models.Video, error)
 }
 
 type FeedItemStore interface {

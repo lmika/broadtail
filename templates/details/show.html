@@ -1,7 +1,7 @@
 <div>
     <h3>Video: {{.video.Title}}</h3>
 
-    <div class="fields">
+    <div class="fields padded">
         <img class="thumbnail" src="{{.video.ThumbnailURL}}">
         <div class="pre-wrap">{{.video.Description}}</div>
     </div>
@@ -9,7 +9,7 @@
         <div class="field">
             <div class="field-name">Video ID</div>
             <div class="field-value">
-                <a href="https://www.youtube.com/watch?v={{.video.ExtID}}">{{.video.ExtID}}</a>
+                <a href="{{.videoURL}}">{{.video.VideoRef.ID}}</a>
             </div>
         </div>
         {{if .video.ChannelID}}
@@ -26,7 +26,7 @@
         {{end}}
         <div class="field">
             <div class="field-name">Uploaded On</div>
-            <div class="field-value">{{formatTime .video.UploadedOn}}</div>
+            <div class="field-value">{{formatUploadTime .video.UploadedOn}}</div>
         </div>
         <div class="field">
             <div class="field-name">Duration</div>
@@ -42,7 +42,7 @@
                 <a href="#" class="favourite" data-controller="favourite-link"
                    data-favourite-link-favourite-id-value="{{.favouriteID}}"
                    data-favourite-link-origin-type-value="manual"
-                   data-favourite-link-origin-id-value="youtube:{{.video.ExtID}}"
+                   data-favourite-link-origin-id-value="{{.video.VideoRef.Source}}:{{.video.VideoRef.ID}}"
                    data-action="click->favourite-link#toggleActive"
                    data-favourite-link-active-class="active" data-favourite-link-loading-class="loading">
                     <i class="fa fa-spinner"></i>
@@ -55,11 +55,8 @@
 
 
     <div class="rel-links">
-        <form action="/job/download/youtube" method="post">
-            <input type="hidden" name="youtube_id" value="{{.video.ExtID}}">
-            {{if .fromFeedID}}
-                <input type="hidden" name="from_feed_id" value="{{.fromFeedID}}">
-            {{end}}
+        <form action="/job/download/video" method="post">
+            <input type="hidden" name="video_ref" value="{{.video.VideoRef}}">
             <input type="submit" value="Download">
         </form>
     </div>

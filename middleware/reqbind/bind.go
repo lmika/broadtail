@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/pkg/errors"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
@@ -47,10 +48,10 @@ func doFormBind(target interface{}, r *http.Request) error {
 		return err
 	}
 
-	return bindStruct(v.Elem(), r, "")
+	return bindStruct(v.Elem(), r.Form, "")
 }
 
-func bindStruct(sct reflect.Value, r *http.Request, prefix string) error {
+func bindStruct(sct reflect.Value, values url.Values, prefix string) error {
 	sctType := sct.Type()
 	for i := 0; i < sctType.NumField(); i++ {
 		fieldName := sctType.Field(i)
@@ -66,49 +67,60 @@ func bindStruct(sct reflect.Value, r *http.Request, prefix string) error {
 		if hasOption && option == "zero" {
 			field.Set(reflect.Zero(field.Type()))
 		}
-
-		value := r.FormValue(prefix + formName)
+		fullFormName := prefix + formName
 
 		var err error
 		switch field.Type().Kind() {
 		case reflect.Struct:
-			err = bindStruct(field, r, prefix+formName+".")
+			err = bindStruct(field, values, fullFormName+".")
 		default:
-			err = setField(field, value)
+			if !values.Has(fullFormName) {
+				continue
+			}
+
+			// Use the last form value for scalar types.  This is to deal with the stupid checkbox hack
+			lastValue := values[fullFormName][len(values[fullFormName])-1]
+			err = errors.Wrapf(setScalar(field, lastValue), "field %v", fullFormName)
 		}
 
 		if err != nil {
-			return nil
+			return err
 		}
 	}
 
 	return nil
 }
 
-func setField(field reflect.Value, formValue string) error {
+func setScalar(field reflect.Value, formValue string) error {
 	// Primitives
 	switch field.Type().Kind() {
 	case reflect.String:
-		field.Set(reflect.ValueOf(formValue))
+		field.SetString(formValue)
+		return nil
 	case reflect.Int:
 		intValue, _ := strconv.Atoi(formValue)
-		field.Set(reflect.ValueOf(intValue))
+		field.SetInt(int64(intValue))
+		return nil
 	case reflect.Bool:
 		switch formValue {
 		case "1", "t", "T", "true", "TRUE", "True", "on", "ON":
-			field.Set(reflect.ValueOf(true))
+			field.SetBool(true)
 		case "0", "f", "F", "false", "FALSE", "False", "off", "OFF":
-			field.Set(reflect.ValueOf(false))
+			field.SetBool(false)
 		}
+		return nil
 	}
 
+	// Interfaces that support text unmarshalling
 	if field.Type().AssignableTo(textUnmarshalerType) {
 		ut := field.Interface().(encoding.TextUnmarshaler)
 		_ = ut.UnmarshalText([]byte(formValue))
+		return nil
 	} else if fieldPtr := field.Addr(); fieldPtr.Type().AssignableTo(textUnmarshalerType) {
 		ut := fieldPtr.Interface().(encoding.TextUnmarshaler)
 		_ = ut.UnmarshalText([]byte(formValue))
+		return nil
 	}
 
-	return nil
+	return errors.New("unsupported type")
 }

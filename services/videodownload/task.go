@@ -1,4 +1,4 @@
-package ytdownload
+package videodownload
 
 import (
 	"context"
@@ -18,11 +18,12 @@ import (
 )
 
 type YoutubeDownloadTask struct {
-	YoutubeId   string
+	VideoRef    models.VideoRef
+	LibraryDir  string
 	TargetDir   string
 	TargetOwner string
 
-	DownloadProvider  DownloadProvider
+	VideoSource       DownloadProvider
 	VideoStore        VideoStore
 	VideoDownloadHook VideoDownloadHooks
 	Feed              *models.Feed
@@ -46,14 +47,14 @@ func (y *YoutubeDownloadTask) String() string {
 		return fmt.Sprintf("Downloading '%s'", summariseTitle(y.youtubeTitle, maxTitleLength))
 	}
 
-	return "Downloading " + y.YoutubeId
+	return "Downloading " + y.VideoRef.ID
 }
 
 func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunContext) error {
 	runContext.PostUpdate(jobs.Update{Summary: "Initialising", Percent: 0.0})
 	runContext.PostMessage("Fetching video metadata")
 
-	metadata, err := y.DownloadProvider.GetVideoMetadata(ctx, y.YoutubeId)
+	metadata, err := y.VideoSource.GetVideoMetadata(ctx, y.VideoRef)
 	if err != nil {
 		return errors.Wrap(err, "cannot get metadata")
 	}
@@ -61,13 +62,14 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 	y.setTitle(metadata.Title)
 
 	// Create the directory
+	fullTargetDir := filepath.Join(y.LibraryDir, y.TargetDir)
 	if y.TargetDir != "" {
-		if err := os.MkdirAll(y.TargetDir, 0755); err != nil {
+		if err := os.MkdirAll(fullTargetDir, 0755); err != nil {
 			return errors.Wrapf(err, "cannot create target directory: %v", y.TargetDir)
 		}
 
 		// FIXME: this needs to be recursive up to the library dir
-		if err := y.changeToTargetOwner(y.TargetDir); err != nil {
+		if err := y.changeToTargetOwner(fullTargetDir); err != nil {
 			runContext.PostMessage("warn: " + err.Error())
 		}
 	}
@@ -78,16 +80,27 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 		runContext.PostMessage(fmt.Sprintf("Downloading video: attempt %d of 3", attempt))
 
 		var err error
-		outputFilename, err = y.DownloadProvider.DownloadVideo(ctx, y.YoutubeId, models.DownloadOptions{
-			TargetDir: y.TargetDir,
-		}, func(line string) {
-			if prog, ok := parseProgress(line); ok {
-				runContext.PostUpdate(jobs.Update{
-					Percent: prog.Percent,
-					Summary: fmt.Sprintf("%.1f%% - ETA %v", prog.Percent, prog.ETA),
-				})
+		outputFilename, err = y.VideoSource.DownloadVideo(ctx, y.VideoRef, models.DownloadOptions{
+			TargetDir: fullTargetDir,
+		}, func(logMessage models.LogMessage) {
+			if logMessage.Permille >= 0 {
+				percent := float64(logMessage.Permille) / 10.0
+				etaStr := formatETA(logMessage.ETA)
+				if etaStr != "" {
+					runContext.PostUpdate(jobs.Update{
+						Percent: percent,
+						Summary: fmt.Sprintf("%.1f%% - %v", percent, etaStr),
+					})
+				} else {
+					runContext.PostUpdate(jobs.Update{
+						Percent: percent,
+						Summary: fmt.Sprintf("%.1f%%", percent),
+					})
+				}
 			}
-			runContext.PostMessage(line)
+			if logMessage.Message != "" {
+				runContext.PostMessage(logMessage.Message)
+			}
 		})
 		if err != nil {
 			// Check that the context hasn't been cancelled
@@ -122,21 +135,13 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 		runContext.PostMessage("warn: " + err.Error())
 	}
 
-	var relativeFilename = outputFilename
-	if r, err := filepath.Rel(y.TargetDir, outputFilename); err == nil {
-		relativeFilename = r
-	} else {
-		runContext.PostMessage("warn: cannot get relative filename: " + err.Error())
-	}
-
 	// Save the downloaded file details
-	videoExtId := models.ExtIDPrefixYoutube + y.YoutubeId
 	savedVideo := models.SavedVideo{
 		ID:       uuid.New(),
-		ExtID:    videoExtId,
+		VideoRef: y.VideoRef,
 		Title:    metadata.Title,
 		SavedOn:  time.Now(),
-		Location: relativeFilename,
+		Location: filepath.Join(y.TargetDir, filepath.Base(outputFilename)),
 		FileSize: stat.Size(),
 	}
 	if y.Feed != nil {
@@ -146,7 +151,7 @@ func (y *YoutubeDownloadTask) Execute(ctx context.Context, runContext jobs.RunCo
 		savedVideo.Source = "Manual download"
 	}
 
-	if err := y.VideoStore.DeleteWithExtID(videoExtId); err != nil {
+	if err := y.VideoStore.DeleteWithExtID(y.VideoRef); err != nil {
 		runContext.PostMessage("warn: cannot delete existing video details: " + err.Error())
 	}
 
@@ -171,7 +176,7 @@ func (y *YoutubeDownloadTask) setTitle(newTitle string) {
 }
 
 func (y *YoutubeDownloadTask) VideoExtID() string {
-	return y.YoutubeId
+	return y.VideoRef.String()
 }
 
 func (y *YoutubeDownloadTask) VideoTitle() string {
@@ -207,4 +212,18 @@ func summariseTitle(t string, maxLen int) string {
 	}
 
 	return t
+}
+
+func formatETA(eta time.Duration) string {
+	if eta <= 0 {
+		return ""
+	}
+
+	hr := int(eta.Hours())
+	min := int(eta.Minutes()) % 60
+	sec := int(eta.Seconds()) % 60
+	if hr > 0 {
+		return fmt.Sprintf("ETA %d:%02d:%02d", hr, min, sec)
+	}
+	return fmt.Sprintf("ETA %d:%02d", min, sec)
 }
