@@ -34,9 +34,9 @@
                         <i class="fa fa-star"></i>
                     </a>
                 </td>
-                <td><a href="/details/video/{{.FeedItem.VideoRef}}">{{.FeedItem.Title}}</a></td>
+                <td><a class="{{classNameIf .Downloaded "downloaded"}}" href="/details/video/{{.FeedItem.VideoRef}}">{{.FeedItem.Title}}</a></td>
                 {{if .Feed}}
-                <td><a href="/feeds/{{.Feed.ID}}">{{.Feed.Name}}</a></td>
+                <td><a class="{{classNameIf .Downloaded "downloaded"}}" href="/feeds/{{.Feed.ID}}">{{.Feed.Name}}</a></td>
                 {{else}}
                 <td>(unknown)</td>
                 {{end}}

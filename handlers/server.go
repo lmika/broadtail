@@ -135,7 +135,7 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
 	})
 
 	favouriteService := favourites.NewService(favouriteStore, vidDownloadService, feedsStore, feedItemStore)
-	feedsManager := feedsmanager.New(feedsStore, feedItemStore, feedFetcher, favouriteService, rulesStore, vidDownloadService)
+	feedsManager := feedsmanager.New(feedsStore, feedItemStore, feedFetcher, favouriteService, rulesStore, videoStore, vidDownloadService)
 	videoManager := videomanager.New(config.LibraryDir, videoStore)
 	rulesService := rules.NewService(rulesStore, feedsStore)
 
@@ -247,6 +247,12 @@ func Server(config Config) (handler http.Handler, closeFn func(), err error) {
                     	<input name="%s" type="checkbox" value="on" %s> %s
                 	</label>
 				`, escapedName, escapedName, checkAttr, escapedLabel))
+			},
+			"classNameIf": func(value bool, className string) string {
+				if value {
+					return className
+				}
+				return ""
 			},
 		}),
 		render.WithFrame("frames/main.html"),

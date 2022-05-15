@@ -20,6 +20,7 @@ type FeedsManager struct {
 	feedFetcher      FeedFetcher
 	favouriteService *favourites.Service
 	rulesStore       RulesStore
+	videoStore       VideoStore
 	videoDownloader  VideoDownloader
 
 	feedUpdateMutex *sync.Mutex
@@ -28,10 +29,11 @@ type FeedsManager struct {
 func New(
 	store FeedStore,
 	feedProvider FeedItemStore,
-// rssFeedSource RSSFetcher,
+	// rssFeedSource RSSFetcher,
 	feedFetcher FeedFetcher,
 	favouriteService *favourites.Service,
 	rulesStore RulesStore,
+	videoStore VideoStore,
 	videoDownloader VideoDownloader,
 ) *FeedsManager {
 	return &FeedsManager{
@@ -40,6 +42,7 @@ func New(
 		feedFetcher:      feedFetcher,
 		rulesStore:       rulesStore,
 		favouriteService: favouriteService,
+		videoStore:       videoStore,
 		videoDownloader:  videoDownloader,
 		feedUpdateMutex:  new(sync.Mutex),
 	}
@@ -216,10 +219,16 @@ func (fm *FeedsManager) RecentFeedItems(ctx context.Context, feed *models.Feed, 
 
 	recentFeedItems := make([]models.RecentFeedItem, 0)
 	for _, fi := range feedItems {
+		var wasDownloaded bool
+		if vs, err := fm.videoStore.FindWithExtID(fi.VideoRef); err == nil && vs != nil {
+			wasDownloaded = true
+		}
+
 		recentFeedItems = append(recentFeedItems, models.RecentFeedItem{
 			Feed:        *feed,
 			FeedItem:    fi,
 			FavouriteID: fm.favouriteIdForFeedItem(ctx, fi),
+			Downloaded:  wasDownloaded,
 		})
 	}
 
@@ -239,10 +248,16 @@ func (fm *FeedsManager) RecentFeedItemsFromAllFeeds(ctx context.Context, filterE
 			log.Printf("warn: cannot get feed with id: %v", err)
 		}
 
+		var wasDownloaded bool
+		if vs, err := fm.videoStore.FindWithExtID(fi.VideoRef); err == nil && vs != nil {
+			wasDownloaded = true
+		}
+
 		recentFeedItems = append(recentFeedItems, models.RecentFeedItem{
 			Feed:        feed,
 			FeedItem:    fi,
 			FavouriteID: fm.favouriteIdForFeedItem(ctx, fi),
+			Downloaded:  wasDownloaded,
 		})
 	}
 

@@ -39,3 +39,7 @@ type RulesStore interface {
 type VideoDownloader interface {
 	QueueForDownload(ctx context.Context, videoRef models.VideoRef, feed *models.Feed) error
 }
+
+type VideoStore interface {
+	FindWithExtID(videoRef models.VideoRef) (*models.SavedVideo, error)
+}

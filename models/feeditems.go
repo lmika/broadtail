@@ -18,6 +18,7 @@ type RecentFeedItem struct {
 	FeedItem    FeedItem
 	Feed        Feed
 	FavouriteID string
+	Downloaded  bool
 }
 
 // FetchedFeedItem is a feed item fetched from a RSS source
