@@ -62,9 +62,10 @@ func (p *Provider) convertToFetchedFeedItem(rssEntries []ytrss.Entry) []models.F
 				Source: models.YoutubeVideoRefSource,
 				ID:     rssEntry.VideoID,
 			},
-			Title:     rssEntry.Title,
-			Link:      rssEntry.Link,
-			Published: rssEntry.Published,
+			Title:       rssEntry.Title,
+			Link:        rssEntry.Link,
+			Description: rssEntry.Media.Description,
+			Published:   rssEntry.Published,
 		}
 	}
 	return ffis
