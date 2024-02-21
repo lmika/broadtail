@@ -32,7 +32,7 @@ func New(youtubeDLCommand []string) (*Provider, error) {
 
 func (p *Provider) checkAvailable() error {
 	cmd := p.buildYoutubeDLCommand(context.Background(), "--version")
-	return errors.Wrap(cmd.Run(), "youtube-dl is not available")
+	return errors.Wrap(cmd.Run(), "yt-dlp is not available")
 }
 
 func (p *Provider) GetVideoMetadata(ctx context.Context, youtubeId string) (*models.Video, error) {

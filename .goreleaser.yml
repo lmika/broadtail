@@ -3,6 +3,7 @@ builds:
   - id: release_build
     targets:
       - linux_amd64
+      - linux_arm64
     binary: broadtail
     hooks:
       pre: make build-js

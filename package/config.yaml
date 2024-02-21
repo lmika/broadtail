@@ -8,7 +8,7 @@ port: 3690
 data_dir: /var/lib/broadtail
 
 # The youtube-dl command to use.
-youtubedl_command: python3 /usr/local/bin/youtube-dl
+youtubedl_command: yt-dlp
 
 # The location of the library, which will be where downloaded videos will be stored.
 # When using this with Plex, this should be a directory or a sub-directory of a configured
