@@ -1,10 +1,27 @@
 package youtubedl
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
+
+func TestParseStatus(t *testing.T) {
+	scenarios := []struct {
+		status string
+	}{
+		{status: `[download] 96.0% of 20.55MiB at 2.04MiB/s ETA 00:00`},
+	}
+
+	for _, scenario := range scenarios {
+		t.Run(scenario.status, func(t *testing.T) {
+			res, ok := parseProgress(scenario.status)
+			assert.True(t, ok)
+			assert.Equal(t, float64(96), res.Percent)
+		})
+	}
+}
 
 func TestParseETA(t *testing.T) {
 	scenarios := []struct {
