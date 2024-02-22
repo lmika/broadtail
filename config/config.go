@@ -11,7 +11,7 @@ type Config struct {
 	BindAddr string `fig:"bind_addr" default:""`
 	Port     int    `fig:"port" default:"3690"`
 
-	YoutubeDLCommand string `fig:"youtubedl_command" default:"python3 /usr/local/bin/youtube-dl"`
+	YoutubeDLCommand string `fig:"youtubedl_command" default:"yt-dlp"`
 
 	DataDir string `fig:"data_dir" validate:"required"`
 

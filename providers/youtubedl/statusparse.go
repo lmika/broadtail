@@ -1,7 +1,7 @@
 package youtubedl
 
 import (
-	"regexp"
+		"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -17,7 +17,8 @@ type progress struct {
 }
 
 func parseProgress(message string) (progress, bool) {
-	groups := progressRegexp.FindStringSubmatch(strings.TrimSpace(stripAnsiCharacters(message)))
+	msg := strings.TrimSpace(stripAnsiCharacters(message))
+	groups := progressRegexp.FindStringSubmatch(msg)
 	if len(groups) != 5 {
 		//log.Println("bad progress: ", len(groups))
 		return progress{}, false
@@ -64,7 +65,7 @@ func parseNumAndShift(toks *[]string, mup time.Duration) time.Duration {
 
 // [download] 2.1% of 86.31MiB at 84.91KiB/s ETA 16:59
 // [download] 96.0% of 20.55MiB at 2.04MiB/s ETA 00:00
-var progressRegexp = regexp.MustCompile(`\[download\]\s+([0-9.]+)% of ([0-9A-Za-z.]+) at ([0-9A-Za-z.]+)/s ETA ([0-9:.]+)`)
+var progressRegexp = regexp.MustCompile(`\[download\]\s+([0-9.]+)%\s+of\s+([0-9A-Za-z.]+)\s+at\s+([0-9A-Za-z.]+)/s ETA ([0-9:.]+)`)
 
 func stripAnsiCharacters(line string) string {
 	nonAnsiSequences := new(strings.Builder)
